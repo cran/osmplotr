@@ -13,6 +13,7 @@
 #' vector of 4 elements (xmin, ymin, xmax, ymax).  
 #' @return A list of highways matching 'highway_names', each element of which is
 #' a list of distinct components for the given highway.
+#' @export
 
 extract_highways <- function (highway_names=NULL, bbox=NULL)
 {
@@ -70,8 +71,6 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
     }
     if (notnull < length (highway_names))
         stop ('Unable to download all requested data.')
-
-
 
     # ***** (2) Order the individual OSM objects into a minimal number of
     # *****     discrete sequences

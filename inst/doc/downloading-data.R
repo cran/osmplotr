@@ -1,8 +1,5 @@
-## ----load, include=FALSE-------------------------------------------------
-setwd ("../..")
-library (devtools)
-load_all ("osmplotr")
-setwd ("./osmplotr/vignettes")
+## ----load----------------------------------------------------------------
+library (osmplotr)
 
 ## ------------------------------------------------------------------------
 bbox <- c(-0.15,51.5,-0.1,51.52) 
@@ -25,6 +22,8 @@ structs$suffix [5] <- 'BC'
 #  {
 #      dat <- extract_osm_objects (key=structs$key [i], value=structs$value [i],
 #                                  bbox=bbox)
+#      if (!is.null (dat$warn))
+#          warning (dat$warn)
 #      fname <- paste0 ('dat_', structs$suffix [i])
 #      assign (fname, dat)
 #      london [[i]] <- get (fname)

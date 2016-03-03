@@ -16,6 +16,8 @@ vector of 4 elements (xmin, ymin, xmax, ymax).}
 }
 \value{
 SpatialLinesDataFrame containing the highway
+
+SpatialLinesDataFrame containing the highway
 }
 \description{
 Extracts an OpenStreetMap highway by name, within the given bounding box.

@@ -8,6 +8,8 @@
 #' @param bbox the bounding box within which to look for highways.  Must be a
 #' vector of 4 elements (xmin, ymin, xmax, ymax).  
 #' @return SpatialLinesDataFrame containing the highway
+#' @return SpatialLinesDataFrame containing the highway
+#' @export
 
 extract_highway <- function (name='', bbox=NULL)
 {
@@ -24,8 +26,8 @@ extract_highway <- function (name='', bbox=NULL)
     bbox <- paste0 ('(', bbox [2], ',', bbox [1], ',',
                    bbox[4], ',', bbox [3], ')')
 
-    query <- paste0 ("(way['name'~'", name, "']", bbox)
-    query <- paste0 (query, ';>;);out;')
+    query <- paste0 ("way['name'~'", name, "']", bbox)
+    query <- paste0 (query, ';(._;>;);out;')
     url_base <- 'http://overpass-api.de/api/interpreter?data='
     query <- paste0 (url_base, query)
     dat <- RCurl::getURL (query)
@@ -41,8 +43,5 @@ extract_highway <- function (name='', bbox=NULL)
         warning ('No valid data for name=(', name, ')')
         return (NULL)
     } else
-    {
-        sp <- subset (dato, ids = pids)
-        return (osmar::as_sp (sp, 'lines'))
-    }
+        return (osmar::as_sp (subset (dato, ids = pids), 'lines'))
 }

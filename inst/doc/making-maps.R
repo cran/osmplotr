@@ -1,13 +1,10 @@
-## ----load, include=FALSE-------------------------------------------------
-setwd ("../..")
-library (devtools)
-load_all ("osmplotr")
-setwd ("./osmplotr/vignettes")
+## ----load----------------------------------------------------------------
+library (maptools)
+library (osmplotr)
 
 ## ---- echo=FALSE, message=FALSE------------------------------------------
 # Combining (dat_B, dat_BC) and (dat_H, dat_HP) requires removing the repeated
 # objects
-library (maptools)
 indx <- which (!london$dat_BR$id %in% london$dat_BNR$id)
 dat_B <- spRbind (london$dat_BR [indx,], london$dat_BNR)
 indx <- which (!london$dat_H$id %in% london$dat_HP$id)
@@ -67,7 +64,8 @@ add_osm_objects (dat_B, col="gray40", border="orange", lwd=0.2)
 graphics.off ()
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  dat_BR <- extract_osm_objects (key="building", value="residential", bbox=bbox)
+#  dat_BR <- extract_osm_objects (key="building", value="residential",
+#                                 bbox=bbox)
 #  dat_HP <- extract_osm_objects (key="highway", value="primary", bbox=bbox)
 
 ## ---- echo=FALSE---------------------------------------------------------
@@ -96,7 +94,8 @@ add_osm_objects (dat_HP, col="gray80")
 graphics.off ()
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  dat_BNR <- extract_osm_objects (key="building", value="!residential", bbox=bbox)
+#  dat_BNR <- extract_osm_objects (key="building", value="!residential",
+#                                  bbox=bbox)
 
 ## ---- echo=FALSE---------------------------------------------------------
 dat_BNR <- london$dat_BNR
@@ -209,7 +208,7 @@ pts <- sp::SpatialPoints (cbind (c (-0.128, -0.138, -0.138, -0.128),
                              c (51.502, 51.502, 51.515, 51.515)))
 
 ## ----map14, eval=TRUE----------------------------------------------------
-plot_osm_basemap (xylims=xylims, bg="gray21", file="map14.png")
+plot_osm_basemap (xylims=xylims, bg="gray20", file="map14.png")
 group_osm_objects (dat_B, groups=pts, col="orange", col_extra="gray40", 
                    colmat=FALSE, boundary=1)
 col_park_in <- rgb (50, 255, 50, maxColorValue=255)
