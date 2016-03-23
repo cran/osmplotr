@@ -9,10 +9,15 @@
 #' @param highway_names A vector of highway names passed directly to the
 #' Overpass API. Wildcards and whitespaces are '.'; for other options see
 #' overpass help.
-#' @param bbox the bounding box within which to look for highways.  Must be a
-#' vector of 4 elements (xmin, ymin, xmax, ymax).  
+#' @param bbox the bounding box for the map.  A 2-by-2 matrix of 4 elements with
+#' columns of min and max values, and rows of x and y values.  
 #' @return A list of highways matching 'highway_names', each element of which is
 #' a list of distinct components for the given highway.
+#' @return A list of 2 components:
+#' \enumerate{
+#'  \item obj: A data frame of sp objects
+#'  \item warn: Any warnings produced in downloading the data
+#' }
 #' @export
 
 extract_highways <- function (highway_names=NULL, bbox=NULL)
@@ -55,9 +60,11 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
         for (i in seq (highway_names))
         {
             dat <- extract_highway (name = highway_names [i], bbox=bbox)
-            if (!is.null (dat))
+            if (!is.null (dat$obj))
                 notnull <- notnull + 1
-            assign (waynames [i], dat)
+            else
+                warning (dat$warn)
+            assign (waynames [i], dat$obj)
             setTxtProgressBar(pb, i / length (highway_names))
         }
         rm (dat)

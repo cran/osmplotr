@@ -1,30 +1,11 @@
----
-title: "Downloading Data"
-author: "Mark Padgham"
-date: "`r Sys.Date()`"
-#output: rmarkdown::pdf_document
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Downloading Data}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r load, eval=FALSE}
+``` r
 #library (osmplotr)
 devtools::install_github ('mpadge/osmplotr')
 ```
-```{r, echo=FALSE, message=FALSE}
-require (devtools)
-setwd ("../..")
-load_all ("osmplotr")
-setwd ("./osmplotr/vignettes")
-```
 
-This vignette demonstrates how the `london` data included with the `osmplotr`
-package were generated. First customise an `osm_structures` data frame.
+This vignette demonstrates how the `london` data included with the `osmplotr` package were generated. First customise an `osm_structures` data frame.
 
-```{r}
+``` r
 # better with a bigger bbox:
 # bbox <- get_bbox (c(-0.15,51.5,-0.1,51.52))
 bbox <- get_bbox (c(-0.13,51.5,-0.11,51.52))
@@ -42,11 +23,9 @@ structs$suffix [4] <- 'BR'
 structs$suffix [5] <- 'BC'
 ```
 
-Then download the corresponding data, noting that `extract_osm_objects` returns
-two components: `warn` containing any warnings generated during download, and
-`obj` containing the appropriate spatial object.
+Then download the corresponding data, noting that `extract_osm_objects` returns two components: `warn` containing any warnings generated during download, and `obj` containing the appropriate spatial object.
 
-```{r, eval=FALSE}
+``` r
 london <- list ()
 for (i in 1:(nrow (structs) - 1)) 
 {
@@ -62,10 +41,9 @@ for (i in 1:(nrow (structs) - 1))
 }
 ```
 
-And finally the additional data for specific buildings and highways (ignoring
-potential warnings this time).
+And finally the additional data for specific buildings and highways (ignoring potential warnings this time).
 
-```{r, eval=FALSE}
+``` r
 extra_pairs <- c ('name', 'Royal.Festival.Hall')
 london$dat_RFH <- extract_osm_objects (key='building', extra_pairs=extra_pairs, 
                                        bbox=bbox)$obj

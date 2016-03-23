@@ -6,8 +6,9 @@
 #' graphics device is automatically calculated in proportion to the given width
 #' according to the aspect ratio of the bounding box.
 #'
-#' @param xylims Latitude-longitude range to be plotted as returned from
-#' get_xylims()
+#' @param bbox bounding box (Latitude-longitude range) to be plotted.  A 2-by-2
+#' matrix of 4 elements with columns of min and max values, and rows of x and y
+#' values.
 #' @param filename Name of plot file; default=NULL plots to screen device (low
 #' quality and likely slow)
 #' @param width Width of graphics file (in px; default 480).
@@ -22,9 +23,13 @@
 #' height; see ?png, for example, for details)
 #' @return nothing (generates file of specified type)
 #' @export
+#'
+#' @examples
+#' plot_osm_basemap (bbox=get_bbox (c (-0.15, 51.5, -0.1, 51.52)), col="gray20")
+#' add_osm_objects (london$dat_BNR, col="gray40") # non-residential buildings
 
-plot_osm_basemap <- function (xylims=xylims, filename=NULL, width=640,
-                              structures=NULL, bg='gray20',
+plot_osm_basemap <- function (bbox=bbox, filename=NULL, width=640,
+                              structures=NULL, bg='gray20', 
                               graphic.device='png', ...)
 {
     if (!is.null (structures))
@@ -36,15 +41,15 @@ plot_osm_basemap <- function (xylims=xylims, filename=NULL, width=640,
 
     if (is.null (filename) & width == 640)
         width <- 7
-    height <- width * diff (xylims$y) / diff (xylims$x)
+    height <- width * diff (bbox [2,]) / diff (bbox [1,])
     if (!is.null (filename))
         png (filename=filename, width=width, height=height,
              type='cairo-png', bg='white', ...)
     else 
         dev.new (width=width, height=height)
 
-    par (mar=c(0,0,0,0))
-    plot (NULL, NULL, xlim=xylims$x, ylim=xylims$y, xaxs='i', yaxs='i',
+    par (mar=rep (0, 4))
+    plot (NULL, NULL, xlim=bbox [1,], ylim=bbox [2,], xaxs='i', yaxs='i',
           xaxt='n', yaxt='n', xlab='', ylab='', bty='n')
     usr <- par ('usr')
     rect (usr [1], usr [3], usr [2], usr [4], border=NA, col=bg)

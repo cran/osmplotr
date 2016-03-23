@@ -1,8 +1,17 @@
-## ----load----------------------------------------------------------------
-library (osmplotr)
+## ----load, eval=FALSE----------------------------------------------------
+#  #library (osmplotr)
+#  devtools::install_github ('mpadge/osmplotr')
+
+## ---- echo=FALSE, message=FALSE------------------------------------------
+require (devtools)
+setwd ("../..")
+load_all ("osmplotr")
+setwd ("./osmplotr/vignettes")
 
 ## ------------------------------------------------------------------------
-bbox <- c(-0.15,51.5,-0.1,51.52) 
+# better with a bigger bbox:
+# bbox <- get_bbox (c(-0.15,51.5,-0.1,51.52))
+bbox <- get_bbox (c(-0.13,51.5,-0.11,51.52))
 structures <- c ('highway', 'highway', 'building', 'building', 'building',
                  'amenity', 'grass', 'park', 'natural', 'tree')   
 structs <- osm_structures (structures=structures, col_scheme='dark')   
@@ -25,7 +34,7 @@ structs$suffix [5] <- 'BC'
 #      if (!is.null (dat$warn))
 #          warning (dat$warn)
 #      fname <- paste0 ('dat_', structs$suffix [i])
-#      assign (fname, dat)
+#      assign (fname, dat$obj)
 #      london [[i]] <- get (fname)
 #      names (london)[i] <- fname
 #      rm (list=c(fname))
@@ -34,11 +43,13 @@ structs$suffix [5] <- 'BC'
 ## ---- eval=FALSE---------------------------------------------------------
 #  extra_pairs <- c ('name', 'Royal.Festival.Hall')
 #  london$dat_RFH <- extract_osm_objects (key='building', extra_pairs=extra_pairs,
-#                                         bbox=bbox)
+#                                         bbox=bbox)$obj
 #  extra_pairs <- list (c ('addr:street', 'Stamford.St'),
 #                       c ('addr:housenumber', '150'))
 #  london$dat_ST <- extract_osm_objects (key='building', extra_pairs=extra_pairs,
-#                                        bbox=bbox)
+#                                        bbox=bbox)$obj
+#  # These examples need expanded bboxes
+#  bbox <- get_bbox (c(-0.15,51.5,-0.10,51.52))
 #  highways <- c ('Kingsway', 'Holborn', 'Farringdon.St', 'Strand',
 #                 'Fleet.St', 'Aldwych')
 #  london$highways1 <- highways2polygon (highways=highways, bbox=bbox)

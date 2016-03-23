@@ -11,12 +11,18 @@ extract_highways(highway_names = NULL, bbox = NULL)
 Overpass API. Wildcards and whitespaces are '.'; for other options see
 overpass help.}
 
-\item{bbox}{the bounding box within which to look for highways.  Must be a
-vector of 4 elements (xmin, ymin, xmax, ymax).}
+\item{bbox}{the bounding box for the map.  A 2-by-2 matrix of 4 elements with
+columns of min and max values, and rows of x and y values.}
 }
 \value{
 A list of highways matching 'highway_names', each element of which is
 a list of distinct components for the given highway.
+
+A list of 2 components:
+\enumerate{
+ \item obj: A data frame of sp objects
+ \item warn: Any warnings produced in downloading the data
+}
 }
 \description{
 Extracts a list of named OpenStreetMap highways. OSM data are neither

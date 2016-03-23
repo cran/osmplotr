@@ -10,7 +10,7 @@
 
 <meta name="author" content="Mark Padgham" />
 
-<meta name="date" content="2016-03-03" />
+<meta name="date" content="2016-03-22" />
 
 <title>Downloading Data</title>
 
@@ -72,13 +72,16 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="header">
 <h1 class="title">Downloading Data</h1>
 <h4 class="author"><em>Mark Padgham</em></h4>
-<h4 class="date"><em>2016-03-03</em></h4>
+<h4 class="date"><em>2016-03-22</em></h4>
 </div>
 
 
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span> (osmplotr)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#library (osmplotr)</span>
+devtools::<span class="kw">install_github</span> (<span class="st">'mpadge/osmplotr'</span>)</code></pre></div>
 <p>This vignette demonstrates how the <code>london</code> data included with the <code>osmplotr</code> package were generated. First customise an <code>osm_structures</code> data frame.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">bbox &lt;-<span class="st"> </span><span class="kw">c</span>(-<span class="fl">0.15</span>,<span class="fl">51.5</span>,-<span class="fl">0.1</span>,<span class="fl">51.52</span>) 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># better with a bigger bbox:</span>
+<span class="co"># bbox &lt;- get_bbox (c(-0.15,51.5,-0.1,51.52))</span>
+bbox &lt;-<span class="st"> </span><span class="kw">get_bbox</span> (<span class="kw">c</span>(-<span class="fl">0.13</span>,<span class="fl">51.5</span>,-<span class="fl">0.11</span>,<span class="fl">51.52</span>))
 structures &lt;-<span class="st"> </span><span class="kw">c</span> (<span class="st">'highway'</span>, <span class="st">'highway'</span>, <span class="st">'building'</span>, <span class="st">'building'</span>, <span class="st">'building'</span>,
                  <span class="st">'amenity'</span>, <span class="st">'grass'</span>, <span class="st">'park'</span>, <span class="st">'natural'</span>, <span class="st">'tree'</span>)   
 structs &lt;-<span class="st"> </span><span class="kw">osm_structures</span> (<span class="dt">structures=</span>structures, <span class="dt">col_scheme=</span><span class="st">'dark'</span>)   
@@ -100,7 +103,7 @@ for (i in <span class="dv">1</span>:(<span class="kw">nrow</span> (structs) -<sp
     if (!<span class="kw">is.null</span> (dat$warn))
         <span class="kw">warning</span> (dat$warn)
     fname &lt;-<span class="st"> </span><span class="kw">paste0</span> (<span class="st">'dat_'</span>, structs$suffix [i])
-    <span class="kw">assign</span> (fname, dat)
+    <span class="kw">assign</span> (fname, dat$obj)
     london [[i]] &lt;-<span class="st"> </span><span class="kw">get</span> (fname)
     <span class="kw">names</span> (london)[i] &lt;-<span class="st"> </span>fname
     <span class="kw">rm</span> (<span class="dt">list=</span><span class="kw">c</span>(fname))
@@ -108,11 +111,13 @@ for (i in <span class="dv">1</span>:(<span class="kw">nrow</span> (structs) -<sp
 <p>And finally the additional data for specific buildings and highways (ignoring potential warnings this time).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">extra_pairs &lt;-<span class="st"> </span><span class="kw">c</span> (<span class="st">'name'</span>, <span class="st">'Royal.Festival.Hall'</span>)
 london$dat_RFH &lt;-<span class="st"> </span><span class="kw">extract_osm_objects</span> (<span class="dt">key=</span><span class="st">'building'</span>, <span class="dt">extra_pairs=</span>extra_pairs, 
-                                       <span class="dt">bbox=</span>bbox)
+                                       <span class="dt">bbox=</span>bbox)$obj
 extra_pairs &lt;-<span class="st"> </span><span class="kw">list</span> (<span class="kw">c</span> (<span class="st">'addr:street'</span>, <span class="st">'Stamford.St'</span>),
                      <span class="kw">c</span> (<span class="st">'addr:housenumber'</span>, <span class="st">'150'</span>))
 london$dat_ST &lt;-<span class="st"> </span><span class="kw">extract_osm_objects</span> (<span class="dt">key=</span><span class="st">'building'</span>, <span class="dt">extra_pairs=</span>extra_pairs, 
-                                      <span class="dt">bbox=</span>bbox)
+                                      <span class="dt">bbox=</span>bbox)$obj
+<span class="co"># These examples need expanded bboxes</span>
+bbox &lt;-<span class="st"> </span><span class="kw">get_bbox</span> (<span class="kw">c</span>(-<span class="fl">0.15</span>,<span class="fl">51.5</span>,-<span class="fl">0.10</span>,<span class="fl">51.52</span>))
 highways &lt;-<span class="st"> </span><span class="kw">c</span> (<span class="st">'Kingsway'</span>, <span class="st">'Holborn'</span>, <span class="st">'Farringdon.St'</span>, <span class="st">'Strand'</span>,
                <span class="st">'Fleet.St'</span>, <span class="st">'Aldwych'</span>)
 london$highways1 &lt;-<span class="st"> </span><span class="kw">highways2polygon</span> (<span class="dt">highways=</span>highways, <span class="dt">bbox=</span>bbox)
