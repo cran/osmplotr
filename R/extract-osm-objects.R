@@ -17,23 +17,31 @@
 #' max values, and rows of x and y values.
 #' @param verbose If TRUE, provides notification of progress
 #'
-#' @return A list of 2 components:
-#' \enumerate{
-#'  \item obj: A data frame of sp objects
-#'  \item warn: Any warnings produced in downloading the data
-#' }
+#' @return A data frame of sp objects
 #' @export
+#'
+#' @seealso \code{\link{add_osm_objects}}.
+#'
+#' @examples
+#' \dontrun{
+#' bbox <- get_bbox (c(-0.13,51.50,-0.11,51.52))
+#' dat_B <- extract_osm_objects (key='building', bbox=bbox)
+#' dat_H <- extract_osm_objects (key='highway', bbox=bbox)
+#' dat_BR <- extract_osm_objects (key='building', value='residential', bbox=bbox)
+#' dat_HP <- extract_osm_objects (key='highway', value='primary', bbox=bbox)
+#' dat_HNP <- extract_osm_objects (key='highway', value='!primary', bbox=bbox)
+#' extra_pairs <- c ('name', 'Royal.Festival.Hall')
+#' dat <- extract_osm_objects (key='building', extra_pairs=extra_pairs, bbox=bbox)
+#' }
 
-extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL, 
-                                 bbox=NULL, verbose=FALSE)
+extract_osm_objects <- function (key, value, extra_pairs, bbox, verbose=FALSE)
 {
+    if (missing (key))
+        stop ('key must be provided')
+    if (missing (bbox))
+        stop ('bbox must be provided')
     stopifnot (is.numeric (bbox))
     stopifnot (length (bbox) == 4)
-
-    # make_osm_map passes empty values as '' rather than NULL:
-    if (!is.null (value))
-        if (nchar (value) == 0)
-            value <- NULL
 
     if (key == 'park')
     {
@@ -43,14 +51,18 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
     {
         key <- 'landuse'
         value <- 'grass'
+    } else if (key == 'tree')
+    {
+        key <- 'natural'
+        value <- 'tree'
     }
     
     # Construct the overpass query, starting with main key-value pair and
     # possible negation
-    valold <- value
     keyold <- key
-    if (!is.null (value))
+    if (!missing (value))
     {
+        valold <- value
         if (substring (value, 1, 1) == '!')
             value <- paste0 ("['", key, "'!='", 
                             substring (value, 2, nchar (value)), "']")
@@ -58,14 +70,15 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
             value <- paste0 ("['", key, "'~'", value, "']")
         else
             value <- paste0 ("['", key, "'='", value, "']")
-    }
+    } else
+        value <- ''
     if (key == 'name')
         key <- ''
     else
         key <- paste0 ("['", key, "']")
 
     # Then any extra key-value pairs
-    if (!is.null (extra_pairs))
+    if (!missing (extra_pairs))
     {
         if (!is.list (extra_pairs))
             extra_pairs <- list (extra_pairs)
@@ -73,7 +86,8 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
         for (i in extra_pairs)
             ep <- paste0 (ep, "['", i [1], "'~'", i [2], "']")
         extra_pairs <- ep
-    }
+    } else
+        extra_pairs <- ''
 
     bbox <- paste0 ('(', bbox [2,1], ',', bbox [1,1], ',',
                     bbox [2,2], ',', bbox [1,2], ')')
@@ -84,33 +98,36 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
                     ';rel', key, value, extra_pairs, bbox, ';')
     url_base <- 'http://overpass-api.de/api/interpreter?data='
     query <- paste0 (url_base, query, ');(._;>;);out;')
-    value <- valold
+    if (nchar (value) > 0)
+        value <- valold
+    else
+        value <- NULL
     key <- keyold
 
-    warn <- obj <- NULL
+    obj <- NULL
 
-    if (verbose) message ("downloading OSM data ... ")
+    if (verbose) message ('downloading OSM data ... ')
     dat <- httr::GET (query)
     if (dat$status_code != 200)
-        warn <- httr::http_status (dat)$message
-    # Encoding must be supplied to suppress warning
-    dat <- XML::xmlParse (httr::content (dat, "text", encoding='UTF-8'))
+        warning (httr::http_status (dat)$message)
+    # Encoding must be supplied in the following to suppress warning
+    dat <- XML::xmlParse (httr::content (dat, 'text', encoding='UTF-8'))
 
     k <- v <- NULL # supress 'no visible binding' note from R CMD check
-    if (verbose) message ("converting OSM data to omsar format")
+    if (verbose) message ('converting OSM data to omsar format')
     dato <- osmar::as_osmar (dat)
     # A very important NOTE: It can arise the OSM relations have IDs which
     # duplicate IDs in OSM ways, even through the two may bear no relationship
     # at all. This causes the attempt in `osmar::as_sp` to force them to an `sp`
     # object to crash because 
     # # Error in validObject(.Object) :
-    # #   invalid class "SpatialLines" object: non-unique Lines ID of slot values
+    # #   invalid class 'SpatialLines' object: non-unique Lines ID of slot values
     # The IDs are actually neither needed not used, so the next lines simply
-    # modifies all relation IDs by pre-pending "r" to avoid such problems:
+    # modifies all relation IDs by pre-pending 'r' to avoid such problems:
     for (i in seq (dato$relations))
         if (nrow (dato$relations [[i]]) > 0)
-            dato$relations [[i]]$id <- paste0 ("r", dato$relations [[i]]$id)
-    if (!is.null (key))
+            dato$relations [[i]]$id <- paste0 ('r', dato$relations [[i]]$id)
+    if (nchar (key) > 0)
         pids <- osmar::find (dato, osmar::way (osmar::tags(k == key)))
     else if (!is.null (value))
         pids <- osmar::find (dato, osmar::way (osmar::tags(v == value)))
@@ -122,7 +139,7 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
         if (value == 'tree') # no pids needed
             spts <- TRUE
 
-    if (verbose) message ("converting osmar data to sp format")
+    if (verbose) message ('converting osmar data to sp format')
     if (spts)
         obj <- osmar::as_sp (dato, 'points')
     else
@@ -133,7 +150,7 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
         pids <- lapply (pids, function (i) unique (i))
         nvalid <- sum (sapply (pids, length))
         if (nvalid <= 3) # (nodes, ways, relations)
-            warn <- paste0 ('No valid data for (', key, ', ', value, ')')
+            warning (paste0 ('No valid data for (', key, ', ', value, ')'))
         else
         {
             obj <- subset (dato, ids = pids)
@@ -146,5 +163,5 @@ extract_osm_objects <- function (key='building', value=NULL, extra_pairs=NULL,
         }
     }
 
-    return (list (obj=obj, warn=warn))
+    return (obj)
 }

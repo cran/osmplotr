@@ -1,57 +1,66 @@
 #' plot_osm_basemap
 #'
 #' Generates a base OSM plot ready for polygon, line, and point objects to be
-#' overlain with add_osm_objects(). NOTE: Graphics files must be closed after
-#' finishing map with dev.off() or graphics.off(). Unless specified, height of
-#' graphics device is automatically calculated in proportion to the given width
-#' according to the aspect ratio of the bounding box.
+#' overlain with add_osm_objects(). 
 #'
 #' @param bbox bounding box (Latitude-longitude range) to be plotted.  A 2-by-2
 #' matrix of 4 elements with columns of min and max values, and rows of x and y
 #' values.
-#' @param filename Name of plot file; default=NULL plots to screen device (low
-#' quality and likely slow)
-#' @param width Width of graphics file (in px; default 480).
 #' @param structures Data frame returned by osm_structures() used here to
-#' specify background colour of plot; if 'structs=NULL', the colour is specified
-#' by 'bg'
+#' specify background colour of plot; if missing, the colour is specified by
+#' 'bg'
 #' @param bg Background colour of map (default = 'gray20' only if structs not
 #' given)
-#' @param graphic.device Type of graphic device to print to. For example, 'png'
-#' (default), 'jpeg', 'png', or 'tiff' 
-#' @param ... Other parameters to be passed to graphic device (such as width and
-#' height; see ?png, for example, for details)
-#' @return nothing (generates file of specified type)
+#' @return ggplot object containing base map
 #' @export
 #'
+#' @seealso \code{\link{add_osm_objects}}, \code{\link{make_osm_map}}.
+#'
 #' @examples
-#' plot_osm_basemap (bbox=get_bbox (c (-0.15, 51.5, -0.1, 51.52)), col="gray20")
-#' add_osm_objects (london$dat_BNR, col="gray40") # non-residential buildings
+#' bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
+#' map <- plot_osm_basemap (bbox=bbox, bg='gray20')
+#' map <- add_osm_objects (map, london$dat_BNR, col='gray40') 
+#' print (map)
 
-plot_osm_basemap <- function (bbox=bbox, filename=NULL, width=640,
-                              structures=NULL, bg='gray20', 
-                              graphic.device='png', ...)
+plot_osm_basemap <- function (bbox, structures, bg='gray20')
 {
-    if (!is.null (structures))
+    # ---------------  sanity checks and warnings  ---------------
+    if (missing (bbox))
+        stop ('bbox must be supplied')
+    if (!is.numeric (bbox))
+        stop ('bbox is not numeric')
+    if (length (bbox) < 4)
+        stop ('bbox must have length = 4')
+
+    if (!missing (structures))
         bg = structure$cols [which (structures$structure == 'background')]
+    if (!(is.character (bg) | is.numeric (bg)))
+    {
+        warning ('bg will be coerced to character')
+        bg <- as.character (bg)
+    }
+    # ---------------  end sanity checks and warnings  ---------------
 
-    if (!is.null (filename))
-        if (nchar (filename) == 0)
-            filename <- NULL
+    # Because the initial plot has no data, setting these elements suffices to
+    # generate a blank plot area with no margins
+    new_theme <- ggplot2::theme_minimal ()
+    new_theme$panel.background <- ggplot2::element_rect (fill = bg, size=0)
+    new_theme$line <- ggplot2::element_blank ()
+    new_theme$axis.text <- ggplot2::element_blank ()
+    new_theme$axis.title <- ggplot2::element_blank ()
+    new_theme$plot.margin <- ggplot2::margin (rep (ggplot2::unit (0, 'null'), 4))
+    new_theme$plot.margin <- ggplot2::margin (rep (ggplot2::unit (-0.5, 'line'), 4))
+    new_theme$legend.position <- 'none'
+    new_theme$axis.ticks.length <- ggplot2::unit(0,'null')
 
-    if (is.null (filename) & width == 640)
-        width <- 7
-    height <- width * diff (bbox [2,]) / diff (bbox [1,])
-    if (!is.null (filename))
-        png (filename=filename, width=width, height=height,
-             type='cairo-png', bg='white', ...)
-    else 
-        dev.new (width=width, height=height)
+    lon <- lat <- NA
+    map <- ggplot2::ggplot () + new_theme +
+                ggplot2::coord_cartesian (xlim=range (bbox[1,]), 
+                                          ylim=range (bbox[2,])) +
+                ggplot2::aes (x=lon, y=lat) +
+                ggplot2::scale_x_continuous (expand=c(0, 0)) +
+                ggplot2::scale_y_continuous (expand=c(0, 0))
 
-    par (mar=rep (0, 4))
-    plot (NULL, NULL, xlim=bbox [1,], ylim=bbox [2,], xaxs='i', yaxs='i',
-          xaxt='n', yaxt='n', xlab='', ylab='', bty='n')
-    usr <- par ('usr')
-    rect (usr [1], usr [3], usr [2], usr [4], border=NA, col=bg)
+    return (map)
 }
 

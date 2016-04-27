@@ -3,8 +3,8 @@
 #' Extracts a list of named OpenStreetMap highways. OSM data are neither
 #' structured nor ordered; this routine reduces data for each given highway to a
 #' minimal number of discrete and sequentially ordered segments. These segments
-#' may or may not connect, yet may be connected at their nearest points with
-#' connect_highways().
+#' may or may not connect, yet can be connected at their nearest points with
+#' get_highway_cycle().
 #'
 #' @param highway_names A vector of highway names passed directly to the
 #' Overpass API. Wildcards and whitespaces are '.'; for other options see
@@ -18,13 +18,12 @@
 #'  \item obj: A data frame of sp objects
 #'  \item warn: Any warnings produced in downloading the data
 #' }
-#' @export
 
-extract_highways <- function (highway_names=NULL, bbox=NULL)
+extract_highways <- function (highway_names, bbox)
 {
-    if (is.null (highway_names))
+    if (missing (highway_names))
         stop ('A vector of highway names must be given')
-    if (is.null (bbox))
+    if (missing (bbox))
         stop ('A bounding box must be given')
 
     # Proceeds through five stages:
@@ -53,6 +52,7 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
     max_trials <- 20
     count <- 1
     notnull <- 0
+    p4s <- NULL
     while (notnull < length (highway_names))
     {
         pb <- txtProgressBar (max=1, style = 3) # shows start and end positions
@@ -60,11 +60,12 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
         for (i in seq (highway_names))
         {
             dat <- extract_highway (name = highway_names [i], bbox=bbox)
-            if (!is.null (dat$obj))
+            if (!is.null (dat))
+            {
                 notnull <- notnull + 1
-            else
-                warning (dat$warn)
-            assign (waynames [i], dat$obj)
+                p4s <- proj4string (dat)
+                assign (waynames [i], dat)
+            } 
             setTxtProgressBar(pb, i / length (highway_names))
         }
         rm (dat)
@@ -128,7 +129,7 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
                         lj <- sp::SpatialLines (list (Lines (list (lj), ID='a'))) 
                         int <- rgeos::gIntersection (li, lj)
                         if (!is.null (int))
-                            sum (coordinates (int) %in% x)
+                            sum (sp::coordinates (int) %in% x)
                         else
                             -1
                         })
@@ -139,7 +140,7 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
                     x <- test_flat [k] [[1]]
                     lj <- sp::Line (x)
                     lj <- sp::SpatialLines (list (Lines (list (lj), ID='a'))) 
-                    xy <- coordinates (rgeos::gIntersection (li, lj))
+                    xy <- sp::coordinates (rgeos::gIntersection (li, lj))
                     d <- sqrt ((xy [1] - obji [[j]] [,1]) ^ 2 + 
                                (xy [2] - obji [[j]] [,2]) ^ 2)
                     di <- which.min (d)
@@ -226,22 +227,25 @@ extract_highways <- function (highway_names=NULL, bbox=NULL)
     } # end for i over all objs
 
     # (4) Remove any segments that do not cross or touch any others
-    removes <- NULL
-    for (i in seq (objs))
-        for (j in seq (objs [[i]]))
-        {
-            objs_temp <- objs
-            objs_temp [[i]] [[j]] <- NULL
-            objs_temp <- do.call (rbind, do.call (c, objs_temp))
-            indx <- array (objs [[i]] [[j]] %in% objs_temp,
-                           dim=dim (objs [[i]] [[j]]))
-            if (max (rowSums (indx)) < 2)
-                removes <- rbind (c (i, j), removes)
-        }
-    # removes is constructed backwards, so can be directly NULLed
-    if (nrow (removes) > 0)
-        for (i in seq (nrow (removes)))
-            objs [[removes [i,1] ]] [[removes [i,2] ]] <- NULL
+    # ---> This is actually not a good idea!
+    #removes <- NULL
+    #for (i in seq (objs))
+    #    for (j in seq (objs [[i]]))
+    #    {
+    #        objs_temp <- objs
+    #        objs_temp [[i]] [[j]] <- NULL
+    #        objs_temp <- do.call (rbind, do.call (c, objs_temp))
+    #        indx <- array (objs [[i]] [[j]] %in% objs_temp,
+    #                       dim=dim (objs [[i]] [[j]]))
+    #        if (max (rowSums (indx)) < 2)
+    #            removes <- rbind (c (i, j), removes)
+    #    }
+    ## removes is constructed backwards, so can be directly NULLed
+    #if (nrow (removes) > 0)
+    #    for (i in seq (nrow (removes)))
+    #        objs [[removes [i,1] ]] [[removes [i,2] ]] <- NULL
+
+    attr (objs, "crs") <- p4s
 
     return (objs)
 }
