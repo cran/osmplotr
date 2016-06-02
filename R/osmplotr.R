@@ -5,56 +5,60 @@
 #' Contains the following functions, data, and vignettes.
 #'
 #' @section Data Functions:
-#' \tabular{ll}{
-#' 'extract_osm_objects'\tab Download arbitrary OSM objects\cr
-#' 'connect_highways'\tab Returns points sequentially connecting list of named
-#' highways\cr
+#' \itemize{
+#' \item \code{\link{extract_osm_objects}}: Download arbitrary OSM objects
+#' \item \code{\link{connect_highways}}: Returns points sequentially connecting
+#' list of named highways
 #' }
 #'
 #' @section Basic Plotting Functions (without data):
-#' \tabular{ll}{
-#' 'add_axes'\tab Overlay longitudinal and latitudinal axes on plot\cr 
-#' 'add_colourbar'\tab Overlay a scaled colourbar for data added with
-#' 'add_osm_surface'\cr 
-#' 'add_osm_objects'\tab Overlay arbitrary OSM objects\cr 
-#' 'make_osm_map'\tab Automate map production with structures defined in
-#' 'osm_structures'\cr 
-#' 'osm_structures'\tab Define structures and graphics schemes for automating
-#' map production \cr 
-#' 'plot_osm_basemap'\tab Initiate a plotting device for an OSM map\cr 
+#' \itemize{
+#' \item \code{\link{add_axes}}: Overlay longitudinal and latitudinal axes on plot
+#' \item \code{\link{add_osm_objects}}: Overlay arbitrary OSM objects  
+#' \item \code{\link{make_osm_map}}: Automate map production with structures
+#' defined in \code{\link{osm_structures}}  
+#' \item \code{\link{osm_structures}}: Define structures and graphics schemes for
+#' automating map production  
+#' \item \code{\link{osm_basemap}}: Initiate a \code{ggplot2} object for an OSM
+#' map  
+#' \item \code{\link{print_osm_map}}: Print a map to specified graphics
+#' device 
 #' } 
 #'
 #' @section Advanced Plotting Functions (with data):
-#' \tabular{ll}{
-#' 'add_osm_groups'\tab Overlay groups of objects using specified colour
-#' scheme\cr 
-#' 'add_osm_surface'\tab Overlay data surface by interpolating given data \cr 
+#' \itemize{
+#' \item \code{\link{add_osm_groups}}: Overlay groups of objects using specified
+#' colour scheme  
+#' \item \code{\link{add_osm_surface}}: Overlay data surface by interpolating
+#' given data  
+#' \item \code{\link{add_colourbar}}: Overlay a scaled colourbar for data added
+#' with \code{\link{add_osm_surface}}  
 #' }
 #'
 #' @section Colour Manipulation Functions:
-#' \tabular{ll}{
-#' 'adjust_colours'\tab Lighted or darken given colours by specified amount\cr 
-#' 'colour_mat'\tab Generate continuous 2D spatial matrix of colours\cr 
+#' \itemize{
+#' \item \code{\link{adjust_colours}}: Lighted or darken given colours by
+#' specified amount  
+#' \item \code{\link{colour_mat}}: Generate continuous 2D spatial matrix of
+#' colours  
 #' }
 #'
 #' @section Other Functions:
-#' \tabular{ll}{
-#' 'get_bbox'\tab return bounding box from input vector\cr 
+#' \itemize{
+#' \item \code{\link{get_bbox}}: return bounding box from input vector  
 #' }
 #'
 #' @section Data:
-#' \tabular{ll}{
-#' 'london'\tab OSM Data from a small portion of central London\cr 
+#' \itemize{
+#' \item \code{\link{london}}: OSM Data from a small portion of central London  
 #' }
 #'
 #' @section Vignettes:
-#' \tabular{ll}{
-#' 'making-maps'\tab Describes basics of downloading data and making custom
-#' maps\cr
-#' 'making-maps-with-data'\tab 
-#' Describes how map elements can be coloured
-#' according to user-provided data, whether 
-#' categorical or continuous.
+#' \itemize{
+#' \item \code{basic-maps}: Describes basics of downloading data and making
+#' custom maps 
+#' \item \code{data-maps}: Describes how map elements can be coloured according
+#' to user-provided data, whether categorical or continuous 
 #' }
 #'
 #' @name osmplotr
@@ -62,44 +66,47 @@
 #' @import httr sp spatstat osmar XML ggm rgeos
 #' @importFrom igraph graph_from_edgelist shortest_paths
 #' @importFrom graphics lines locator plot.new par rect text
-#' @importFrom methods slot as is
-#' @importFrom grDevices dev.new dev.list rainbow rgb col2rgb png
-#' @importFrom grDevices terrain.colors heat.colors
+#' @importFrom methods slot as is hasArg
+#' @importFrom grDevices dev.cur dev.new dev.off rainbow rgb col2rgb heat.colors
+#' @importFrom grDevices bmp jpeg pictex png postscript svg tiff 
 #' @importFrom utils txtProgressBar setTxtProgressBar combn tail
 #' @importFrom stats runif
 NULL
 
 #' london 
 #'
-#' A list of SpatialPolygonsDataFrames (SPDF), SpatialLinesDataFrames (SLDF),
-#' and SpatialPointsDataFrames (SPtDf) containing OpenStreetMap polygons and
-#' lines for various OpenStreetMap structures in a small part of central London,
-#' U.K.  (bbox = -0.15, 51.5, -0.1, 51.52). The list includes:
+#' A list of \code{SpatialPolygonsDataFrames} (SPDF),
+#' \code{SpatialLinesDataFrames} (SLDF), and \code{SpatialPointsDataFrames}
+#' (SPtDf) objects containing OpenStreetMap polygons and lines for various
+#' OpenStreetMap structures in a small part of central London,
+#' U.K.  (\code{bbox = -0.15, 51.5, -0.1, 51.52}). The list includes:
 #' \enumerate{
-#'  \item dat_H an SLDF of non-primary highways with 1.764 lines 
-#'  \item dat_HP an SLDF of primary highways with 378 lines 
-#'  \item dat_BNR an SPDF of non-residential buildings with 2,138 polygons 
-#'  \item dat_BR an SPDF of residential buildings with 40 polygons 
-#'  \item dat_BC an SPDF of commerical buildings with 17 polygons 
-#'  \item dat_A an SPDF of amenities with 442 polygons 
-#'  \item dat_G an SPDF of grassed areas with 23 polygons 
-#'  \item dat_P an SPDF of parks with 24 polygons 
-#'  \item dat_N an SPDF of natural areas with 18 polygons 
-#'  \item dat_T an SPtDF of trees with 1,310 points 
-#'  \item dat_RFH an SPDF containing 1 polygon representing Royal Festival Hall
-#'  \item dat_ST an SPDF containing 1 polygon representing 150 Stamford Street
-#'  \item highways1 A SpatialPoints object containing 55 points representing
-#'  the circular perimeter of c ('Monmouth.St', 'Short.?s.Gardens', 'Endell.St', 
-#' 'Long.Acre', 'Upper.Saint.Martin')
-#'  \item highways2 A SpatialPoints object containing 47 points representing
-#'  the circular perimeter of 
-#' c ('Endell.St', 'High.Holborn', 'Drury.Lane', 'Long.Acre')
-#'  \item highways3 A SpatialPoints object containing 55 points representing
-#'  the circular perimeter of 
-#' c ('Drury.Lane', 'High.Holborn', 'Kingsway', 'Great.Queen.St')
+#'  \item \code{dat_H}: an SLDF of non-primary highways with 1.764 lines 
+#'  \item \code{dat_HP}: an SLDF of primary highways with 378 lines 
+#'  \item \code{dat_BNR}: an SPDF of non-residential buildings with 2,138 polygons 
+#'  \item \code{dat_BR}: an SPDF of residential buildings with 40 polygons 
+#'  \item \code{dat_BC}: an SPDF of commerical buildings with 17 polygons 
+#'  \item \code{dat_A}: an SPDF of amenities with 442 polygons 
+#'  \item \code{dat_G}: an SPDF of grassed areas with 23 polygons 
+#'  \item \code{dat_P}: an SPDF of parks with 24 polygons 
+#'  \item \code{dat_N}: an SPDF of natural areas with 18 polygons 
+#'  \item \code{dat_T}: an SPtDF of trees with 1,310 points 
+#'  \item \code{dat_RFH}: an SPDF containing 1 polygon representing Royal
+#'      Festival Hall 
+#'  \item \code{dat_ST}: an SPDF containing 1 polygon representing
+#'      150 Stamford Street
+#'  \item \code{highways1}: A \code{SpatialPoints} object containing 55 points
+#'      representing the circular perimeter of \code{c ('Monmouth.St',
+#'      'Short.?s.Gardens', 'Endell.St', 'Long.Acre', 'Upper.Saint.Martin')}
+#'  \item \code{highways2}: A \code{SpatialPoints} object containing 47 points
+#'      representing the circular perimeter of 
+#'      \code{c ('Endell.St', 'High.Holborn', 'Drury.Lane', 'Long.Acre')}
+#'  \item \code{highways3}: A \code{SpatialPoints} object containing 55 points
+#'      representing the circular perimeter of 
+#'      \code{c ('Drury.Lane', 'High.Holborn', 'Kingsway', 'Great.Queen.St')}
 #' }
 #'
-#' The vignette 'making-maps' demonstrates how these data were downloaded.
+#' The vignette \code{basic-maps} details how these data were downloaded.
 #'
 #' @docType data
 #' @keywords datasets

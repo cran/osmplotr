@@ -12,68 +12,72 @@ Contains the following functions, data, and vignettes.
 }
 \section{Data Functions}{
 
-\tabular{ll}{
-'extract_osm_objects'\tab Download arbitrary OSM objects\cr
-'connect_highways'\tab Returns points sequentially connecting list of named
-highways\cr
+\itemize{
+\item \code{\link{extract_osm_objects}}: Download arbitrary OSM objects
+\item \code{\link{connect_highways}}: Returns points sequentially connecting
+list of named highways
 }
 }
 
 \section{Basic Plotting Functions (without data)}{
 
-\tabular{ll}{
-'add_axes'\tab Overlay longitudinal and latitudinal axes on plot\cr 
-'add_colourbar'\tab Overlay a scaled colourbar for data added with
-'add_osm_surface'\cr 
-'add_osm_objects'\tab Overlay arbitrary OSM objects\cr 
-'make_osm_map'\tab Automate map production with structures defined in
-'osm_structures'\cr 
-'osm_structures'\tab Define structures and graphics schemes for automating
-map production \cr 
-'plot_osm_basemap'\tab Initiate a plotting device for an OSM map\cr 
+\itemize{
+\item \code{\link{add_axes}}: Overlay longitudinal and latitudinal axes on plot
+\item \code{\link{add_osm_objects}}: Overlay arbitrary OSM objects  
+\item \code{\link{make_osm_map}}: Automate map production with structures
+defined in \code{\link{osm_structures}}  
+\item \code{\link{osm_structures}}: Define structures and graphics schemes for
+automating map production  
+\item \code{\link{osm_basemap}}: Initiate a \code{ggplot2} object for an OSM
+map  
+\item \code{\link{print_osm_map}}: Print a map to specified graphics
+device 
 }
 }
 
 \section{Advanced Plotting Functions (with data)}{
 
-\tabular{ll}{
-'add_osm_groups'\tab Overlay groups of objects using specified colour
-scheme\cr 
-'add_osm_surface'\tab Overlay data surface by interpolating given data \cr 
+\itemize{
+\item \code{\link{add_osm_groups}}: Overlay groups of objects using specified
+colour scheme  
+\item \code{\link{add_osm_surface}}: Overlay data surface by interpolating
+given data  
+\item \code{\link{add_colourbar}}: Overlay a scaled colourbar for data added
+with \code{\link{add_osm_surface}}  
 }
 }
 
 \section{Colour Manipulation Functions}{
 
-\tabular{ll}{
-'adjust_colours'\tab Lighted or darken given colours by specified amount\cr 
-'colour_mat'\tab Generate continuous 2D spatial matrix of colours\cr 
+\itemize{
+\item \code{\link{adjust_colours}}: Lighted or darken given colours by
+specified amount  
+\item \code{\link{colour_mat}}: Generate continuous 2D spatial matrix of
+colours  
 }
 }
 
 \section{Other Functions}{
 
-\tabular{ll}{
-'get_bbox'\tab return bounding box from input vector\cr 
+\itemize{
+\item \code{\link{get_bbox}}: return bounding box from input vector  
 }
 }
 
 \section{Data}{
 
-\tabular{ll}{
-'london'\tab OSM Data from a small portion of central London\cr 
+\itemize{
+\item \code{\link{london}}: OSM Data from a small portion of central London  
 }
 }
 
 \section{Vignettes}{
 
-\tabular{ll}{
-'making-maps'\tab Describes basics of downloading data and making custom
-maps\cr
-'making-maps-with-data'\tab 
-Describes how map elements can be coloured
-according to user-provided data, whether 
-categorical or continuous.
+\itemize{
+\item \code{basic-maps}: Describes basics of downloading data and making
+custom maps 
+\item \code{data-maps}: Describes how map elements can be coloured according
+to user-provided data, whether categorical or continuous 
 }
 }
 

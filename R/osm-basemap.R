@@ -1,28 +1,28 @@
-#' plot_osm_basemap
+#' osm_basemap
 #'
 #' Generates a base OSM plot ready for polygon, line, and point objects to be
-#' overlain with add_osm_objects(). 
+#' overlain with \code{\link{add_osm_objects}}. 
 #'
 #' @param bbox bounding box (Latitude-longitude range) to be plotted.  A 2-by-2
 #' matrix of 4 elements with columns of min and max values, and rows of x and y
 #' values.
-#' @param structures Data frame returned by osm_structures() used here to
-#' specify background colour of plot; if missing, the colour is specified by
-#' 'bg'
-#' @param bg Background colour of map (default = 'gray20' only if structs not
-#' given)
-#' @return ggplot object containing base map
+#' @param structures Data frame returned by \code{\link{osm_structures}} used
+#' here to specify background colour of plot; if missing, the colour is
+#' specified by \code{bg}.
+#' @param bg Background colour of map (default = \code{gray20}) only if
+#' \code{structs} not given).
+#' @return A \code{ggplot2} object containing the base \code{map}.
 #' @export
 #'
 #' @seealso \code{\link{add_osm_objects}}, \code{\link{make_osm_map}}.
 #'
 #' @examples
 #' bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
-#' map <- plot_osm_basemap (bbox=bbox, bg='gray20')
+#' map <- osm_basemap (bbox=bbox, bg='gray20')
 #' map <- add_osm_objects (map, london$dat_BNR, col='gray40') 
-#' print (map)
+#' print_osm_map (map)
 
-plot_osm_basemap <- function (bbox, structures, bg='gray20')
+osm_basemap <- function (bbox, structures, bg='gray20')
 {
     # ---------------  sanity checks and warnings  ---------------
     if (missing (bbox))
@@ -54,9 +54,11 @@ plot_osm_basemap <- function (bbox, structures, bg='gray20')
     new_theme$axis.ticks.length <- ggplot2::unit(0,'null')
 
     lon <- lat <- NA
+    # coord_map uses mapproj::mapproject, but I can't add this as a dependency
+    # because it's not explicitly called, so coord_equal is a workaround.
     map <- ggplot2::ggplot () + new_theme +
-                ggplot2::coord_cartesian (xlim=range (bbox[1,]), 
-                                          ylim=range (bbox[2,])) +
+                ggplot2::coord_equal (xlim=range (bbox[1,]), 
+                                    ylim=range (bbox[2,])) +
                 ggplot2::aes (x=lon, y=lat) +
                 ggplot2::scale_x_continuous (expand=c(0, 0)) +
                 ggplot2::scale_y_continuous (expand=c(0, 0))

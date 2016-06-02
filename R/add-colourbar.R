@@ -1,34 +1,37 @@
 #' add_colorbar
 #'
 #' Adds a colourbar to an existing map. Intended to be used in combination with
-#' add_osm_surface (). At present, only plots on right side of map.
+#' \code{\link{add_osm_surface}}. At present, only plots on right side of map.
 #'
-#' @param map A ggplot2 object to which the colourbar is to be added
+#' @param map A \code{ggplot2} object to which the colourbar is to be added.
 #' @param barwidth Relative width of the bar (perpendicular to its direction),
 #' either a single number giving distance from right or upper margin, or two
 #' numbers giving left/right or lower/upper limits.
 #' @param barlength Relative length of the bar (parallel to its direction),
-#' either a signle number giving total length of centred bar, or two numbers
+#' either a single number giving total length of centred bar, or two numbers
 #' giving lower/upper or left/right limits.
 #' @param zlims Vector of (min,max) values for scale of colourbar. These should
-#' be the values returned from add_osm_surface (). 
-#' @param cols Vector of colours
-#' @param vertical If FALSE, colourbar is aligned horizontally instead of
-#' default vertical alignment
+#' be the values returned from \code{\link{add_osm_surface}}.
+#' @param cols Vector of colours.
+#' @param vertical If \code{FALSE}, colourbar is aligned horizontally instead of
+#' default vertical alignment.
 #' @param alpha Transparency level of region immediately surrounding colourbar,
 #' including behind text. Lower values are more transparent.
-#' @param text_col Colour of text, tick marks, and lines on colourbar
-#' @param fontsize Size of text labels (in ggplot terms; default=3)
-#' @param fontface Fontface for colourbar labels (1:4=plain,bold,italic,bold-italic)
-#' @param fontfamily Family of colourbar font (for example, 'Times')
-#' @return Modified version of map with colourbar added
+#' @param text_col Colour of text, tick marks, and lines on colourbar.
+#' @param fontsize Size of text labels (in \code{ggplot2} terms; default=3).
+#' @param fontface Fontface for colourbar labels
+#' (1:4=plain,bold,italic,bold-italic).
+#' @param fontfamily Family of colourbar font (for example, `\code{Times}').
+#' @param ... Mechanism to allow many parameters to be passed with alternative
+#' names (such as \code{xyz} for \code{fontxyz}).
+#' @return Modified version of \code{map} with colourbar added.
 #' @export
 #'
-#' @seealso \code{\link{plot_osm_basemap}}, \code{\link{add_osm_surface}}.
+#' @seealso \code{\link{osm_basemap}}, \code{\link{add_osm_surface}}.
 #'
 #' @examples
 #' bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
-#' map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+#' map <- osm_basemap (bbox=bbox, bg="gray20")
 #' # Align volcano data to lat-lon range of bbox
 #' dv <- dim (volcano)
 #' x <- seq (bbox [1,1], bbox [1,2], length.out=dv [1])
@@ -45,27 +48,38 @@
 #' # passed to 'add_osm_surface'
 #' map <- add_colourbar (map, zlims=range (volcano), cols=heat.colors(100),
 #'                       text_col="black")
-#' print (map)
+#' print_osm_map (map)
 #'
 #' # Horizontal colourbar shifted away from margins:
-#' map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+#' map <- osm_basemap (bbox=bbox, bg="gray20")
 #' map <- add_osm_surface (map, obj=london$dat_BNR, dat=dat,
 #'                         cols=heat.colors (30))
 #' map <- add_colourbar (map, zlims=range (volcano), cols=heat.colors(100),
 #'                       barwidth=c(0.1,0.15), barlength=c(0.5, 0.9), vertical=FALSE)
-#' print (map)
+#' print_osm_map (map)
 
 add_colourbar <- function (map, barwidth=0.02, barlength=0.7, zlims, cols, 
                            vertical=TRUE, alpha=0.4,
                            text_col="black", fontsize=3,
-                           fontface, fontfamily)
+                           fontface, fontfamily, ...)
 {
+    args <- list (...)
+    if (hasArg ("width")) barwidth <- args [['width']]
+    if (hasArg ("length")) barlength <- args [['length']]
+    if (hasArg ("colors")) cols <- args [['colors']]
+    if (hasArg ("colours")) cols <- args [['colours']]
+    if (hasArg ("color")) text_col <- args [['color']]
+    if (hasArg ("colour")) text_col <- args [['colour']]
+    if (hasArg ("size")) fontsize <- args [['size']]
+    if (hasArg ("face")) fontface <- args [['face']]
+    if (hasArg ("family")) fontfamily <- args [['family']]
+
     # ---------------  sanity checks and warnings  ---------------
     # ---------- map
     if (missing (map))
         stop ('map must be supplied to add_axes')
     if (!is (map, 'ggplot'))
-        stop ('map must be a ggplot object')
+        stop ('map must be a ggplot2 object')
     # ---------- barwidth
     barwidth <- test_len2 (barwidth, 'barwidth')
     barwidth <- test_numeric (barwidth, 'barwidth', 0.02)

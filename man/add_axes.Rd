@@ -5,46 +5,49 @@
 \title{add_axes}
 \usage{
 add_axes(map, colour = "black", pos = c(0.02, 0.03), alpha = 0.4,
-  fontsize = 3, fontface, fontfamily)
+  fontsize = 3, fontface, fontfamily, ...)
 }
 \arguments{
-\item{map}{A ggplot2 object to which the axes are to be added}
+\item{map}{A \code{ggplot2} object to which the axes are to be added.}
 
 \item{colour}{Colour of axis (determines colour of all elements: lines,
-ticks, and labels)}
+ticks, and labels).}
 
-\item{pos}{Positions of axes and labels relative to entire plot device}
+\item{pos}{Positions of axes and labels relative to entire plot device.}
 
 \item{alpha}{alpha value for semi-transparent background surrounding axes and
-labels (lower values increase transparency)}
+labels (lower values increase transparency).}
 
-\item{fontsize}{Size of axis font}
+\item{fontsize}{Size of axis font (in \code{ggplot2} terms; default=3).}
 
-\item{fontface}{Fontface for axis labels (1:4=plain,bold,italic,bold-italic)}
+\item{fontface}{Fontface for axis labels (1:4=plain,bold,italic,bold-italic).}
 
-\item{fontfamily}{Family of axis font (for example, 'Times')}
+\item{fontfamily}{Family of axis font (for example, `\code{Times}').}
+
+\item{...}{Mechanism to allow many parameters to be passed with alternative
+names (\code{color} for \code{colour} and \code{xyz} for \code{fontxyz}.}
 }
 \value{
-Modified version of map with axes added
+Modified version of \code{map} with axes added.
 }
 \description{
 Adds axes to the internal region of an OSM plot.
 }
 \examples{
 bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
-map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+map <- osm_basemap (bbox=bbox, bg="gray20")
 map <- add_osm_objects (map, london$dat_BNR, col="gray40") 
 map <- add_axes (map)
 print (map)
 
 # Map items are added sequentially, so adding axes prior to objects will
 # produce a different result.
-map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+map <- osm_basemap (bbox=bbox, bg="gray20")
 map <- add_axes (map)
 map <- add_osm_objects (map, london$dat_BNR, col="gray40") 
-print (map)
+print_osm_map (map)
 }
 \seealso{
-\code{\link{plot_osm_basemap}}.
+\code{\link{osm_basemap}}.
 }
 

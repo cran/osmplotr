@@ -1,6 +1,9 @@
-## ----load, message=FALSE-------------------------------------------------
-library (osmplotr)
-library (maptools) # Needed for this vignette
+## ----load, eval=FALSE----------------------------------------------------
+#  library (osmplotr)
+#  library (maptools) # Needed for this vignette
+
+## ---- echo=FALSE, message=FALSE------------------------------------------
+library (maptools) 
 
 ## ---- echo=FALSE, message=FALSE------------------------------------------
 setwd ('../..')
@@ -23,20 +26,16 @@ bbox <- get_bbox (c(-0.13,51.50,-0.11,51.52))
 #  dat_B <- extract_osm_objects (key='building', bbox=bbox)
 
 ## ----map1----------------------------------------------------------------
-map <- plot_osm_basemap (bbox=bbox, bg='gray20')
+map <- osm_basemap (bbox=bbox, bg='gray20')
 
 ## ------------------------------------------------------------------------
 map <- add_osm_objects (map, dat_B, col='gray40')
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map1-print, echo=FALSE----------------------------------------------
-mapwd <- 500
-mapht <- mapwd * diff (bbox [2,]) / diff (bbox [1,])
-png (height=mapht, width=mapwd, file='map_a1.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a1.png', width=600, units='px', dpi=72)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  bbox <- get_bbox (c(-0.13,51.51,-0.11,51.52))
@@ -44,13 +43,16 @@ graphics.off ()
 #  dat_H <- extract_osm_objects (key='highway', bbox=bbox)
 
 ## ------------------------------------------------------------------------
-class (dat_B); class (dat_H); class (dat_T)
+class (dat_B); class (dat_H)
 
 ## ------------------------------------------------------------------------
-length (dat_B); length (dat_H); length (dat_T)
+length (dat_B); length (dat_H)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  dat_T <- extract_osm_objects (key='natural', value='tree', bbox=bbox)
+
+## ------------------------------------------------------------------------
+class (dat_T); length (dat_T)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  dat_NT <- extract_osm_objects (key='natural', value='!tree', bbox=bbox)
@@ -128,7 +130,6 @@ class (highways1); length (highways1); head (coordinates (highways1))
 #  highways3 <- connect_highways (highways=highways, bbox=bbox)
 
 ## ----connect_highways, fig.width=4, message=FALSE, eval=TRUE-------------
-# TODO: Set eval=FALSE before cran re-sub!!
 bbox_big <- get_bbox (c(-0.15,51.5,-0.10,51.52))
 highways <- c ('Kingsway', 'Holborn', 'Farringdon.St', 'Strand',
                'Fleet.St', 'Aldwych')
@@ -141,49 +142,43 @@ highway_list <- connect_highways (highways=highways, bbox=bbox_big, plot=TRUE)
 
 ## ----map2----------------------------------------------------------------
 bbox_small <- get_bbox (c(-0.13,51.51,-0.11,51.52))
-map <- plot_osm_basemap (bbox=bbox_small, bg='gray20')
+map <- osm_basemap (bbox=bbox_small, bg='gray20')
 map <- add_osm_objects (map, dat_H, col='gray70')
 map <- add_osm_objects (map, dat_B, col='gray40')
 
-## ---- fig.width=4, fig.height=2, eval=FALSE------------------------------
-#  dev.new (width=8, height=8 * diff (bbox2 [2,]) / diff (bbox2 [1,]))
-#  # or png, pdf, or whatever device is used for printing
-#  print (map)
+## ---- eval=FALSE---------------------------------------------------------
+#  print_osm_map (map)
 
 ## ----map2-print, echo=FALSE----------------------------------------------
-mapht <- mapwd * diff (bbox_small [2,]) / diff (bbox_small [1,])
-png (height=mapht, width=mapwd, file='map_a2.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a2.png', width=600, units='px', dpi=72)
 
 ## ----map3, eval=FALSE----------------------------------------------------
-#  map <- plot_osm_basemap (bbox=bbox_small, bg='gray20')
+#  map <- osm_basemap (bbox=bbox_small, bg='gray20')
 #  map <- add_osm_objects (map, dat_B, col='gray40', border='orange', size=0.2)
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map3-print, echo=FALSE----------------------------------------------
-map <- plot_osm_basemap (bbox=bbox_small, bg='gray20')
+map <- osm_basemap (bbox=bbox_small, bg='gray20')
 map <- add_osm_objects (map, dat_B, col='gray40', border='orange', size=0.2)
-png (height=mapht, width=mapwd, file='map_a3.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a3.png', width=600, units='px', dpi=72)
 
 ## ----map4, eval=FALSE----------------------------------------------------
 #  map <- add_osm_objects (map, dat_H, col='gray70', size=0.7)
 #  map <- add_osm_objects (map, dat_T, col='green', size=2, shape=1)
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map4-print, echo=FALSE----------------------------------------------
 map <- add_osm_objects (map, dat_H, col='gray70', size=0.7)
 map <- add_osm_objects (map, dat_T, col='green', size=2, shape=1)
-png (height=mapht, width=mapwd, file='map_a4.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a4.png', width=600, units='px', dpi=72)
 
-## ---- echo=TRUE, eval=FALSE----------------------------------------------
-#  png (height=mapht, width=mapwd, file='map.png')
-#  print (map)
-#  graphics.off ()
+## ---- eval=FALSE---------------------------------------------------------
+#  print_osm_map (map)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  print_osm_map (map, filename="map.png", width=10, units="in", dpi=72)
+#  print_osm_map (map, filename="map.eps", width=1000, units="px", dpi=72)
+#  print_osm_map (map, filename="map", device="jpeg", width=10, units="cm")
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  dat_HP <- extract_osm_objects (key='highway', value='primary', bbox=bbox)
@@ -194,18 +189,16 @@ dat_HP <- london$dat_HP
 dat_H <- london$dat_H
 
 ## ----map5, eval=FALSE----------------------------------------------------
-#  map <- plot_osm_basemap (bbox=bbox_small, bg='gray20')
+#  map <- osm_basemap (bbox=bbox_small, bg='gray20')
 #  map <- add_osm_objects (map, dat_H, col='gray50')
 #  map <- add_osm_objects (map, dat_HP, col='gray80', size=2)
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map5-print, echo=FALSE----------------------------------------------
-map <- plot_osm_basemap (bbox=bbox_small, bg='gray20')
+map <- osm_basemap (bbox=bbox_small, bg='gray20')
 map <- add_osm_objects (map, dat_H, col='gray50')
 map <- add_osm_objects (map, dat_HP, col='gray80', size=2)
-png (height=mapht, width=mapwd, file='map_a5.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a5.png', width=600, units='px', dpi=72)
 
 ## ---- echo=FALSE---------------------------------------------------------
 dat_RFH <- london$dat_RFH
@@ -213,57 +206,51 @@ dat_ST <- london$dat_ST
 
 ## ----map7, eval=FALSE----------------------------------------------------
 #  bbox_small2 <- get_bbox (c (-0.118, 51.504, -0.110, 51.507))
-#  map <- plot_osm_basemap (bbox=bbox_small2, bg='gray95')
+#  map <- osm_basemap (bbox=bbox_small2, bg='gray95')
 #  map <- add_osm_objects (map, dat_H, col='gray80')
 #  map <- add_osm_objects (map, dat_HP, col='gray60', size=2)
 #  map <- add_osm_objects (map, dat_RFH, col='orange', border='red', size=2)
 #  map <- add_osm_objects (map, dat_ST, col='skyblue', border='blue', size=2)
-#  dev.new (width=8, height=8 * diff (bbox_small2 [2,]) / diff (bbox_small2 [1,]))
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map7-print, echo=FALSE----------------------------------------------
 bbox_small2 <- get_bbox (c (-0.118, 51.504, -0.110, 51.507))
-map <- plot_osm_basemap (bbox=bbox_small2, bg='gray95')
+map <- osm_basemap (bbox=bbox_small2, bg='gray95')
 map <- add_osm_objects (map, dat_H, col='gray80')
 map <- add_osm_objects (map, dat_HP, col='gray60', size=2)
 map <- add_osm_objects (map, dat_RFH, col='orange', border='red', size=2)
 map <- add_osm_objects (map, dat_ST, col='skyblue', border='blue', size=2)
-mapht <- mapwd * diff (bbox_small2 [2,]) / diff (bbox_small2 [1,])
-png (height=mapht, width=mapwd, file='map_a7.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a7.png', width=600, units='px', dpi=72)
 
 ## ----map8, eval=FALSE----------------------------------------------------
 #  structs <- c ('highway', 'building', 'park', 'grass', 'tree')
 #  structures <- osm_structures (structures=structs, col_scheme='light')
-#  dat <- make_osm_map (structures=structures, bbox=bbox)
+#  dat <- make_osm_map (structures=structures, bbox=bbox_small)
 #  map <- dat$map
-#  dev.new (width=8, height=8 * diff (bbox [2,]) / diff (bbox [1,]))
-#  print (map)
+#  print_osm_map (map)
 
-## ----map8-print, echo=FALSE----------------------------------------------
-structs <- c ('highway', 'building', 'amenity', 'park', 'grass', 'tree')   
+## ---- echo=FALSE---------------------------------------------------------
+structs <- c ('highway', 'building', 'park', 'grass', 'tree')   
 structures <- osm_structures (structures=structs, col_scheme='light')   
 osm_dat <- list (dat_B=dat_B, dat_H=dat_H, dat_P=london$dat_P,
                  dat_A=london$dat_A, dat_G=london$dat_G, dat_T=london$dat_T)
-dat <- make_osm_map (structures=structures, osm_data=osm_dat)
-map <- dat$map
-mapht <- mapwd * diff (bbox [2,]) / diff (bbox [1,])
-png (height=mapht, width=mapwd, file='map_a8.png')
-print (map)
-graphics.off ()
+dat <- make_osm_map (structures=structures, osm_data=osm_dat, bbox=bbox_small)
+print_osm_map (dat$map, filename='map_a8.png', width=600, units='px', dpi=72)
+
+## ------------------------------------------------------------------------
+names (dat); names (dat$osm_data)
 
 ## ----map9, eval=FALSE----------------------------------------------------
-#  dat <- make_osm_map (osm_data=dat$osm_data, structures=structures,
-#                       bbox=bbox_small)
-#  print (dat$map)
+#  dat <- make_osm_map (structures=structures, osm_data=dat$osm_data)
+#  print_osm_map (dat$map)
 
 ## ----map9-print, echo=FALSE----------------------------------------------
-dat <- make_osm_map (structures=structures, osm_data=osm_dat, bbox=bbox_small)
-mapht <- mapwd * diff (bbox_small [2,]) / diff (bbox_small [1,])
-png (height=mapht, width=mapwd, file='map_a9.png')
-print (dat$map)
-graphics.off ()
+dat <- make_osm_map (structures=structures, osm_data=osm_dat)
+print_osm_map (dat$map, filename='map_a9.png', width=600, units='px', dpi=72)
+
+## ----map9b, eval=FALSE---------------------------------------------------
+#  dat <- make_osm_map (structures=structures, osm_data=dat$osm_data,
+#                       bbox=bbox_small)
 
 ## ------------------------------------------------------------------------
 structs <- c ('amenity', 'building', 'grass', 'highway', 'park')
@@ -271,24 +258,23 @@ osm_structures (structs, col_scheme='light')
 
 ## ----map10---------------------------------------------------------------
 structures <- osm_structures (structures=structs, col_scheme='dark')   
-dat <- make_osm_map (structures=structures, osm_data=dat$osm_dat, bbox=bbox)
+dat <- make_osm_map (structures=structures, osm_data=dat$osm_dat,
+                     bbox=bbox_small)
 map <- add_axes (dat$map, colour='black')
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  print (map)
+#  print_osm_map (map)
 
 ## ----map10-print, echo=FALSE---------------------------------------------
-png (height=mapht, width=mapwd, file='map_a10.png')
-print (map)
-graphics.off ()
+print_osm_map (map, filename='map_a10.png', width=600, units='px', dpi=72)
 
 ## ----map11, eval=FALSE---------------------------------------------------
-#  map <- add_axes (map, colour='blue', pos=c(0.1,0.2))
-#  print (map)
+#  map <- add_axes (map, colour='blue', pos=c(0.1,0.2),
+#                        fontsize=5, fontface=3, fontfamily="Times")
+#  print_osm_map (map)
 
 ## ----map11-print, echo=FALSE---------------------------------------------
-map <- add_axes (map, colour='blue', pos=c(0.1,0.2))
-png (height=mapht, width=mapwd, file='map_a11.png')
-print (map)
-graphics.off ()
+map <- add_axes (map, colour='blue', pos=c(0.1,0.2),
+                      fontsize=5, fontface=3, fontfamily="Times")
+print_osm_map (map, filename='map_a11.png', width=600, units='px', dpi=72)
 

@@ -1,38 +1,41 @@
 #' add_osm_groups
 #'
-#' Plots spatially distinct groups of osm objects in different colours. 
+#' Plots spatially distinct groups of OSM objects in different colours. 
 #'
-#' @param map A ggplot2 object to which the grouped objects are to be added
-#' @param obj An sp SPDF or SLDF (list of polygons or lines) returned by
-#' extract_osm_objects()
+#' @param map A \code{ggplot2} object to which the grouped objects are to be
+#' added.
+#' @param obj An \code{sp} \code{SpatialPointsDataFrame},
+#' \code{SpatialPolygonsDataFrame}, or \code{SpatialLinesDataFrame} (list of
+#' polygons or lines) returned by \code{\link{extract_osm_objects}}.
 #' @param groups A list of spatial points objects, each of which contains the
-#' coordinates of points defining one group
-#' @param cols Either a vector of >= 4 colours passed to colour_mat() (if
-#' 'colmat=T') to arrange as a 2-D map of visually distinct colours (default
-#' uses rainbow colours), or (if 'colmat=F'), a vector of the same length as
-#' groups specifying individual colours for each.
+#' coordinates of points defining one group.
+#' @param cols Either a vector of >= 4 colours passed to \code{colour_mat} (if
+#' \code{colmat=T}) to arrange as a 2-D map of visually distinct colours
+#' (default uses \code{rainbow} colours), or (if \code{colmat=F}), a vector of
+#' the same length as groups specifying individual colours for each.
 #' @param bg If given, then any objects not within groups are coloured this
 #' colour, otherwise (if not given) they are assigned to nearest group and
-#' coloured accordingly. ('boundary' has no effect in this latter case.)
+#' coloured accordingly (\code{boundary} has no effect in this latter case).
 #' @param make_hull Either a single boolean value or a vector of same length as
 #' groups specifying whether convex hulls should be constructed around all
-#' groups (TRUE), or whether the group already defines a hull (convex or
-#' otherwise; FALSE).
+#' groups (\code{TRUE}), or whether the group already defines a hull (convex or
+#' otherwise; \code{FALSE}).
 #' @param boundary (negative, 0, positive) values define whether the boundary of
 #' groups should (exclude, bisect, include) objects which straddle the precise
-#' boundary. (Has no effect if 'bg' is given)
-#' @param size Size argument passed to ggplot2 (polygon, path, point) functions:
-#' determines width of lines for (polygon, line), and sizes of points.
-#' Respective defaults are (0, 0.5, 0.5).
-#' @param shape Shape of points or lines (the latter passed as 'linetype'): see
-#' ?ggplot2::shape
+#' boundary. (Has no effect if \code{bg} is given).
+#' @param size Size argument passed to \code{ggplot2} (polygon, path, point)
+#' functions: determines width of lines for (polygon, line), and sizes of
+#' points.  Respective defaults are (0, 0.5, 0.5).
+#' @param shape Shape of points or lines (the latter passed as \code{linetype});
+#' see \code{?ggplot2::shape}.
 #' @param borderWidth If given, draws convex hull borders around entire groups
-#' in same colours as groups (try values around 1-2)
-#' @param colmat If TRUE generates colours according to colour_mat(), otherwise
-#' the colours of groups are specified directly by the vector of cols.
-#' @param rotate Passed to colour_mat() to rotate colours by the specified
+#' in same colours as groups (try values around 1-2).
+#' @param colmat If \code{TRUE} generates colours according to
+#' \code{colour_mat}, otherwise the colours of groups are specified directly by
+#' the vector of \code{cols}.
+#' @param rotate Passed to \code{colour_mat} to rotate colours by the specified
 #' number of degrees clockwise.
-#' @return Modified version of map with groups added
+#' @return Modified version of \code{map} with groups added.
 #' @export
 #'
 #' @section Note:
@@ -41,7 +44,7 @@
 #' are *excluded* from the group, while those outside the smaller yet inside the
 #' bigger group are included.
 #'
-#' @seealso \code{\link{colour_mat}}.
+#' @seealso \code{\link{colour_mat}}, \code{\link{add_osm_objects}}.
 #'
 #' @examples
 #' bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
@@ -60,7 +63,7 @@
 #' # Define a function to easily generate a basemap
 #' bmap <- function ()
 #' {
-#'     map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+#'     map <- osm_basemap (bbox=bbox, bg="gray20")
 #'     map <- add_osm_objects (map, dat_HP, col="gray70", size=1)
 #'     add_osm_objects (map, dat_T, col="green")
 #' }
@@ -76,7 +79,7 @@
 #'                        bg="gray40", boundary=1)
 #' map <- add_osm_groups (map, dat_H, groups=pts, cols="gray80",
 #'                        bg="gray30", boundary=1)
-#' print (map)
+#' print_osm_map (map)
 #' }
 #' 
 #' # Generate random points to serve as group centres
@@ -94,33 +97,46 @@
 #' map <- add_osm_groups (map, obj=london$dat_BNR, group=groups, cols=cols)
 #' cols <- adjust_colours (cols, -0.2)
 #' map <- add_osm_groups (map, obj=london$dat_H, groups=groups, cols=cols)
-#' print (map)
+#' print_osm_map (map)
 #' 
 #' # Highlight convex hulls containing groups:
 #' map <- bmap ()
 #' map <- add_osm_groups (map, obj=london$dat_BNR, group=groups, cols=cols,
 #'                        borderWidth=2)
-#' print (map)
+#' print_osm_map (map)
 #' }
 
 add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
                                boundary=-1, size, shape, borderWidth,
                                colmat=FALSE, rotate)
 {
+    # ---------------  sanity checks and warnings  ---------------
+    # ---------- map
+    if (missing (map))
+        stop ('map must be supplied to add_osm_groups')
+    if (!is (map, 'ggplot'))
+        stop ('map must be a ggplot2 object')
+    # ---------- map
+    if (missing (obj))
+        stop ('obj must be supplied to add_osm_groups')
+    if (!is (obj, 'Spatial'))
+        stop ('obj must be a spatial object')
+    # ---------- groups
     if (missing (groups))
     {
-        warning (paste0 ('No groups defined in add_osm_groups; ',
+        warning (paste0 ('No groups defined in add_osm_groups: ',
                          'passing to add_osm_objects'))
         if (missing (cols))
             if (missing (bg))
                 stop ("either 'cols' or 'bg' must be minimally given")
             else
                 cols <- bg
-        add_osm_objects (obj, col=cols [1])
+        add_osm_objects (map, obj, col=cols [1])
         return ()
     } else if (class (groups) != 'list')
     {
-        stopifnot (class (groups) == 'SpatialPoints')
+        if (!is (groups, 'SpatialPoints'))
+            stop ('groups must be a SpatialPoints object (or list thereof)')
         groups <- list (groups)
     } else if (!all ((lapply (groups, class)) == 'SpatialPoints'))
     {
@@ -130,15 +146,36 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
                                     as (x, 'SpatialPoints')),
                   finally = stop (e))
     }
-
-    stopifnot (length (make_hull) == 1 | length (make_hull) == length (groups))
+    # ---------- cols
+    if (missing (cols))
+    {
+        if (missing (bg))
+            stop ("Either 'cols' or 'bg' must be minimally given")
+        else
+        {
+            warning (paste0 ('No group colours defined in add_osm_groups: ',
+                             'passing to add_osm_objects'))
+            add_osm_objects (map, obj, col=bg)
+        }
+    }
+    # ---------- make_hull
+    if (length (make_hull) > length (groups))
+    {
+        warning (paste0 ('make_hull has length > number of groups'))
+        make_hull <- make_hull [seq (groups)]
+    } else if (length (make_hull) > 1 & length (make_hull) < length (groups))
+    {
+        warning (paste0 ('make_hull should have length 1 or equal to numbers ',
+                         'of groups; using first value only'))
+        make_hull <- make_hull [1]
+    }
 
     if (length (groups) == 1)
     {
         colmat <- FALSE
         if (missing (bg))
         {
-            message (paste0 ('plotting one group only makes sense with bg;',
+            message (paste0 ('Plotting one group only makes sense with bg;',
                              ' defaulting to gray40'))
             bg <- 'gray40'
         }
@@ -146,6 +183,7 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
 
     if (max (sapply (groups, length)) < 3) # No groups have > 2 members
         make_hull <- FALSE
+    # ---------------  sanity checks and warnings  ---------------
 
     # Set up group colours
     if (!colmat)

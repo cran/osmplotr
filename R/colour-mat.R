@@ -5,13 +5,14 @@
 #'
 #' @param n number of rows and columns of colour matrix (default = 10; if length
 #' 2, then dimensions of rectangle). 
-#' @param cols vector of length >= 4 of colors (example, default = rainbow
-#' (4), or from RColorBrewer, brewer.pal (4, 'Set1')). cols are wrapped
-#' clockwise around the corners from top left to bottom left. 
+#' @param cols vector of length >= 4 of colors (example, default = \code{rainbow
+#' (4)}, or \code{RColorBrewer::brewer.pal (4, 'Set1')}).
+#' \code{cols} are wrapped clockwise around the corners from top left to bottom
+#' left. 
 #' @param rotate rotates the entire colour matrix by the specified angle (in
 #' degrees).
-#' @param plot plots the colour matrix 
-#' @return matrix of colours
+#' @param plot plots the colour matrix.
+#' @return \code{Matrix} of colours.
 #' @export
 #'
 #' @seealso \code{\link{add_osm_groups}}.
@@ -31,10 +32,10 @@
 #' groups <- apply (groups, 1, function (i) 
 #'                  sp::SpatialPoints (matrix (i, nrow=1, ncol=2)))
 #' # plot a basemap and add groups
-#' map <- plot_osm_basemap (bbox=bbox, bg="gray20")
+#' map <- osm_basemap (bbox=bbox, bg="gray20")
 #' map <- add_osm_groups (map, obj=london$dat_BNR, group=groups, cols=rainbow (4),
 #'                        colmat=TRUE, rotate=90)
-#' print (map)
+#' print_osm_map (map)
 
 colour_mat <- function (n=c(10, 10), cols, rotate, plot=FALSE)
 {
