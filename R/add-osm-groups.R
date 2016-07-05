@@ -146,6 +146,16 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
                                     as (x, 'SpatialPoints')),
                   finally = stop (e))
     }
+    if (length (groups) == 1)
+    {
+        colmat <- FALSE
+        if (missing (bg))
+        {
+            message (paste0 ('Plotting one group only makes sense with bg;',
+                             ' defaulting to gray40'))
+            bg <- 'gray40'
+        }
+    }
     # ---------- cols
     if (missing (cols))
     {
@@ -169,21 +179,14 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
                          'of groups; using first value only'))
         make_hull <- make_hull [1]
     }
-
-    if (length (groups) == 1)
-    {
-        colmat <- FALSE
-        if (missing (bg))
-        {
-            message (paste0 ('Plotting one group only makes sense with bg;',
-                             ' defaulting to gray40'))
-            bg <- 'gray40'
-        }
-    }
-
     if (max (sapply (groups, length)) < 3) # No groups have > 2 members
         make_hull <- FALSE
-    # ---------------  sanity checks and warnings  ---------------
+    # ---------- boundary
+    if (!is.numeric (boundary)) boundary <- 0
+
+    # ---------- colmat
+    if (!is.logical (colmat)) colmat <- FALSE
+    # ---------------  end sanity checks and warnings  ---------------
 
     # Set up group colours
     if (!colmat)
@@ -195,7 +198,7 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
         if (length (groups) == 1 & missing (bg))
         {
             warning ('There is only one group; using default bg')
-            if (is.null (cols))
+            if (missing (cols))
             {
                 cols <- 'red'
                 bg <- 'gray40'
@@ -214,7 +217,11 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
         if (missing (rotate))
             cmat <- colour_mat (ncols, cols=cols)
         else
+        {
+            if (!is.numeric (rotate))
+                rotate <- 0
             cmat <- colour_mat (ncols, cols=cols, rotate)
+        }
         cols <- rep (NA, length (groups)) 
         # cols is then a vector of colours to be filled by matching group
         # centroids to relative positions within cmat
@@ -274,15 +281,26 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
         }
     }
 
-    # first extract mean coordinates for every polygon or line in obj:
+    # Trim obj down to only those items within the limits of the map
+    xrange <- map$coordinates$limits$x
+    yrange <- map$coordinates$limits$y
+    xylims <- lapply (slot (obj, objtxt [1]), function (i)
+                      {
+                          xyi <- slot (slot (i, objtxt [2]) [[1]], 'coords')
+                          c (apply (xyi, 2, min), apply (xyi, 2, max))
+                      })
+    xylims <- do.call (rbind, xylims)
+    indx <- which (xylims [,1] > xrange [1] & xylims [,2] > yrange [1] &
+                   xylims [,3] < xrange [2] & xylims [,4] < yrange [2])
+    obj <- obj [indx,]
+
+    # then extract mean coordinates for every polygon or line in obj:
     xy_mn <- lapply (slot (obj, objtxt [1]),  function (x)
                      colMeans  (slot (slot (x, objtxt [2]) [[1]], 'coords')))
     xmn <- sapply (xy_mn, function (x) x [1])
     ymn <- sapply (xy_mn, function (x) x [2])
 
     #usr <- par ('usr')
-    xrange <- map$coordinates$limits$x
-    yrange <- map$coordinates$limits$y
     boundaries <- list ()
     xy_list <- list () 
     # The following loop constructs:
@@ -307,7 +325,7 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
         }
         else
             bdry <- sp::coordinates (groups [[i]])
-        if (nrow (bdry) > 1) # otherwise group is obvious a single point
+        if (nrow (bdry) > 1) # otherwise group is obviously a single point
         {
             bdry <- rbind (bdry, bdry [1,]) #enclose bdry back to 1st point
             # The next 4 lines are only used if missing (bg)
@@ -529,16 +547,16 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
 
     if (class (obj) == 'SpatialPolygonsDataFrame')
     {
-        if (missing (size))
-            size <- 0
+        if (missing (size)) size <- 0
+        else if (!is.numeric (size)) size <- 0
         map <- map + ggplot2::geom_polygon (data=xyflat, mapping=aes, 
                                             fill=cols [xyflat$col], size=size)
     } else if (class (obj) == 'SpatialLinesDataFrame')
     {
-        if (missing (size))
-            size <- 0.5
-        if (missing (shape))
-            shape <- 1
+        if (missing (size)) size <- 0.5
+        else if (!is.numeric (size)) size <- 0.5
+        if (missing (shape)) shape <- 1
+        else if (!is.numeric (shape)) shape <- 1
         map <- map + ggplot2::geom_path (data=xyflat, mapping=aes, 
                                          colour=cols [xyflat$col], 
                                          size=size, linetype=shape)
@@ -549,31 +567,34 @@ add_osm_groups <- function (map, obj, groups, cols, bg, make_hull=FALSE,
 
     if (!missing (borderWidth)) # draw hulls around entire groups
     {
-        bdry <- list ()
-        for (i in seq (groups))
+        if (is.numeric (borderWidth))
         {
-            indx <- which (xyflat$col == i) # col = group membership
-            if (length (indx) > 1)
+            bdry <- list ()
+            for (i in seq (groups))
             {
-                x <- xyflat$lon [indx]
-                y <- xyflat$lat [indx]
-                indx <- which (!duplicated (cbind (x, y)))
-                x <- x [indx]
-                y <- y [indx]
-                xy2 <- spatstat::ppp (x, y, xrange=range (x), yrange=range (y))
-                ch <- spatstat::convexhull (xy2)
-                bdry [[i]] <- cbind (ch$bdry[[1]]$x, ch$bdry[[1]]$y)
+                indx <- which (xyflat$col == i) # col = group membership
+                if (length (indx) > 1)
+                {
+                    x <- xyflat$lon [indx]
+                    y <- xyflat$lat [indx]
+                    indx <- which (!duplicated (cbind (x, y)))
+                    x <- x [indx]
+                    y <- y [indx]
+                    xy2 <- spatstat::ppp (x, y, xrange=range (x), yrange=range (y))
+                    ch <- spatstat::convexhull (xy2)
+                    bdry [[i]] <- cbind (ch$bdry[[1]]$x, ch$bdry[[1]]$y)
+                }
+                bdry [[i]] <- cbind (i, bdry [[i]])
             }
-            bdry [[i]] <- cbind (i, bdry [[i]])
-        }
-        bdry <- data.frame (do.call (rbind, bdry))
-        names (bdry) <- c ("id", "x", "y")
+            bdry <- data.frame (do.call (rbind, bdry))
+            names (bdry) <- c ("id", "x", "y")
 
-        aes <- ggplot2::aes (x=x, y=y, group=id) 
-        map <- map + ggplot2::geom_polygon (data=bdry, mapping=aes, 
-                                            colour=cols [bdry$id],
-                                            fill="transparent", 
-                                            size=borderWidth)
+            aes <- ggplot2::aes (x=x, y=y, group=id) 
+            map <- map + ggplot2::geom_polygon (data=bdry, mapping=aes, 
+                                                colour=cols [bdry$id],
+                                                fill="transparent", 
+                                                size=borderWidth)
+        }
     }
 
     return (map)

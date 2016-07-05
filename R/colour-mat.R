@@ -3,12 +3,12 @@
 #' Generates a 2D matrix of graduated colours by interpolating between the given
 #' colours specifying the four corners.
 #'
-#' @param n number of rows and columns of colour matrix (default = 10; if length
-#' 2, then dimensions of rectangle). 
 #' @param cols vector of length >= 4 of colors (example, default = \code{rainbow
 #' (4)}, or \code{RColorBrewer::brewer.pal (4, 'Set1')}).
 #' \code{cols} are wrapped clockwise around the corners from top left to bottom
 #' left. 
+#' @param n number of rows and columns of colour matrix (default = 10; if length
+#' 2, then dimensions of rectangle). 
 #' @param rotate rotates the entire colour matrix by the specified angle (in
 #' degrees).
 #' @param plot plots the colour matrix.
@@ -37,26 +37,56 @@
 #'                        colmat=TRUE, rotate=90)
 #' print_osm_map (map)
 
-colour_mat <- function (n=c(10, 10), cols, rotate, plot=FALSE)
+colour_mat <- function (cols, n=c(10, 10), rotate, plot=FALSE)
 {
-    if (missing (cols))
-        cols <- rainbow (4)
-    else if (length (cols) < 4)
-        stop ('cols must have length = 4')
+    # ---------------  sanity checks and warnings  ---------------
+    # ---------- cols
+    if (missing (cols)) stop ('cols must be provided')
+    if (is.null (cols)) return (NULL)
+    else if (length (cols) < 4) stop ('cols must have length >= 4')
+    if (any (is.na (cols))) stop ('One or more cols is NA')
+    if (class (cols) != 'matrix')
+    {
+        cols <- sapply (cols, function (i) {
+                        tryCatch (
+                                  col2rgb (i),
+                                  error = function (e) 
+                                  {
+                                      e$message <-  paste0 ('Invalid colours: ', i)
+                                  })
+                    })
+    } else if (rownames (cols) != c ('red', 'green', 'blue'))
+        stop ('Colour matrix has unknown format')
+    if (any (grep ('Invalid colours', cols)))
+        stop (cols [grep ('Invalid colours', cols) [1]])
 
-    cols <- cols [round (1:4 * length (cols) / 4)]
-    if (class (cols [1]) != 'matrix')
-        cols <- col2rgb (cols)
-
+    indx <- floor (1:4 * ncol (cols) / 4)
+    indx [1] <- 1
+    cols <- cols [, indx]
+    # ---------- n
     if (length (n) == 1)
         n <- rep (n, 2)
+    if (!all (is.numeric (n))) stop ('n must be numeric')
+    if (any (is.na (n))) stop ('n can not be NA')
+    if (any (n < 2)) stop ('n must be > 1')
+    # ---------- rotate
+    if (!missing (rotate))
+    {
+        if (length (rotate) > 1)
+        {
+            warning ('rotate has length > 1; using only first element')
+            rotate <- rotate [1]
+        }
+        if (!is.numeric (rotate)) stop ('rotate must be numeric')
+        if (is.na (rotate)) stop ('rotate can not be NA')
+    }
+    # ---------------  end sanity checks and warnings  ---------------
 
     if (!missing (rotate))
     {
         # rotation generally lowers RGB values, so they are increased following
         # rotation according to the following value:
         max_int <- max (cols)
-        stopifnot (is.numeric (rotate))
         while (rotate < 0)
             rotate <- rotate + 360
         while (rotate > 360)
@@ -71,7 +101,11 @@ colour_mat <- function (n=c(10, 10), cols, rotate, plot=FALSE)
         i2 <- i1 + 1
         x <- (rotate %% 90) / 360
         cols <- (1 - x) * cols [,i1] + x * cols [,i2]
-        cols <- apply (cols, 2, function (x) x * max_int / max (x))
+        cols <- apply (cols, 2, function (x) 
+                       {
+                           if (max (x) == 0) rep (0, 3)
+                           else x * max_int / max (x)
+                       })
     }
 
     tl <- cols [,1] # top left

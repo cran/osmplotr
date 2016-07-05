@@ -16,8 +16,10 @@
 #' @param dat A matrix or data frame of 3 columns (x, y, z), where (x, y) are
 #' (longitude, latitude), and z are the values to be interpolated
 #' @param method Either \code{idw} (Inverse Distance Weighting as
-#' \code{spatstat::idw}; default), otherwise uses \code{Gaussian} for kernel
-#' smoothing (as \code{spatstat::Smooth.ppp})
+#' \code{spatstat::idw}; default), \code{Gaussian} for kernel
+#' smoothing (as \code{spatstat::Smooth.ppp}), or any other value to avoid
+#' interpolation. In this case, \code{dat} must be regularly spaced in \code{x}
+#' and \code{y}.
 #' @param grid_size size of interpolation grid 
 #' @param cols Vector of colours for shading z-values (for example,
 #' \code{terrain.colors (30)})
@@ -108,14 +110,52 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
                               cols=heat.colors (30), bg, size, shape)
 {
     # ---------------  sanity checks and warnings  ---------------
+    # --------- map
     if (missing (map))
-        stop ('map must be supplied to add_osm_objects')
+        stop ('map must be supplied to add_osm_surface')
     if (!is (map, 'ggplot'))
         stop ('map must be a ggplot2 object')
+    # --------- obj
     if (missing (obj))
-        stop ('object must be supplied to add_osm_objects')
+        stop ('object must be supplied to add_osm_surface')
     if (!inherits (obj, 'Spatial'))
-        stop ('obj must be Spatial')
+        stop ('obj must be a spatial object')
+    # --------- dat
+    if (missing (dat))
+        stop ('dat must be supplied to add_osm_surface')
+    else if (is.null (dat))
+        stop ('dat can not be NULL')
+    if (!is.numeric (as.matrix (dat)))
+        stop ('dat must be a numeric matrix or data.frame')
+    else 
+    {
+        dat <- as.matrix (dat)
+        if (ncol (dat) < 3) stop ('dat must have at least 3 columns')
+        wtxt <- paste0 ('dat should have columns of x/y, lon/lat, or equivalent;',
+                        'presuming first 2 columns are lon, lat')
+        if (is.null (colnames (dat)))
+        {
+            warning ('dat has no column names; presming [lon, lat, z]')
+            colnames (dat) [1:3] <- c ('lon', 'lat', 'z')
+        } else
+        {
+            n2 <- sort (colnames (dat) [1:2])
+            if (!(n2 [1] == 'x' | n2 [1] == 'lat') ||
+                !(n2 [2] == 'y' | n2 [2] == 'lon'))
+            {
+                warning ('dat should have columns of x/y, lon/lat, or equivalent;',
+                         ' presuming first 2 columns are lon, lat')
+                colnames (dat) [1:2] <- c ('x', 'y')
+            }
+            if (!'z' %in% colnames (dat))
+            {
+                warning ('dat should have column named z; ',
+                         'presuming that to be 3rd column')
+                colnames (dat) [3] <- 'z'
+            }
+        }
+    }
+    # --------- cols
     if (!(is.character (cols) | is.numeric (cols)))
     {
         warning ("cols will be coerced to character")
@@ -124,16 +164,43 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
     # ---------------  end sanity checks and warnings  ---------------
 
     if (class (obj) == 'SpatialPolygonsDataFrame')
-    {
-        xy0 <- lapply (slot (obj, 'polygons'), function (x)
-                        slot (slot (x, 'Polygons') [[1]], 'coords'))
-        xy0 <- structure (xy0, class=c (class (xy0), 'polygons'))
-        xy0 <- list2df_with_data (map, xy0, dat, bg, grid_size=grid_size)
-        if (missing (bg))
-            xy <- xy0
-        else
-            xy <- xy0 [xy0$inp > 0, ]
+        objtxt <- c ('polygons', 'Polygons')
+    else if (class (obj) == 'SpatialLinesDataFrame')
+        objtxt <- c ('lines', 'Lines')
+    else if (class (obj) == 'SpatialPointsDataFrame')
+        objtxt <- c ('points', '')
 
+    xrange <- map$coordinates$limits$x
+    yrange <- map$coordinates$limits$y
+
+    if (class (obj) == 'SpatialPointsDataFrame')
+    {
+        xy0 <- sp::coordinates (obj)
+    } else
+    {
+        xylims <- lapply (slot (obj, objtxt [1]), function (i)
+                          {
+                              xyi <- slot (slot (i, objtxt [2]) [[1]], 'coords')
+                              c (apply (xyi, 2, min), apply (xyi, 2, max))
+                          })
+        xylims <- do.call (rbind, xylims)
+        indx <- which (xylims [,1] > xrange [1] & xylims [,2] > yrange [1] &
+                       xylims [,3] < xrange [2] & xylims [,4] < yrange [2])
+        obj <- obj [indx,]
+        xy0 <- lapply (slot (obj, objtxt [1]), function (x)
+                        slot (slot (x, objtxt [2]) [[1]], 'coords'))
+    }
+    xy0 <- structure (xy0, class=c (class (xy0), objtxt [1]))
+    xy0 <- list2df_with_data (map, xy0, dat, bg, grid_size=grid_size,
+                              method=method)
+    if (missing (bg))
+        xy <- xy0
+    else
+        xy <- xy0 [xy0$inp > 0, ]
+
+
+    if (class (obj) == 'SpatialPolygonsDataFrame')
+    {
         # TODO: Add border to geom_polygon call
         lon <- lat <- id <- z <- NULL # suppress 'no visible binding' error
         aes <- ggplot2::aes (x=lon, y=lat, group=id, fill=z) 
@@ -153,15 +220,6 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
         }
     } else if (class (obj) == 'SpatialLinesDataFrame')
     {
-        xy0 <- lapply (slot (obj, 'lines'), function (x)
-                        slot (slot (x, 'Lines') [[1]], 'coords'))
-        xy0 <- structure (xy0, class=c (class (xy0), 'lines'))
-        xy0 <- list2df_with_data (map, xy0, dat, bg, grid_size=grid_size)
-        if (missing (bg))
-            xy <- xy0
-        else
-            xy <- xy0 [xy0$inp > 0,]
-
         if (missing (size))
             size <- 0.5
         if (length (size) == 1)
@@ -184,14 +242,6 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
         }
     } else if (class (obj) == 'SpatialPointsDataFrame')
     {
-        xy0 <- sp::coordinates (obj)
-        xy0 <- structure (xy0, class=c (class (xy0), 'points'))
-        xy0 <- list2df_with_data (map, xy0, dat, bg, grid_size=grid_size)
-        if (missing (bg))
-            xy <- xy0
-        else
-            xy <- xy0 [xy0$inp > 0,]
-
         if (missing (size))
             size <- 0.5
         if (length (size) == 1)
@@ -227,8 +277,8 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
 #'
 #' @param map A ggplot2 object (used only to obtain plot limits)
 #' @param xy List of coordinates of spatial objects
-#' @param dat A data surface (which may be irregular) used to provide the
-#' z-values for the resultant data frame.
+#' @param dat A Matrix representing the data surface (which may be irregular)
+#' used to provide the z-values for the resultant data frame.
 #' @param bg background colour from 'add_osm_surface()', passed here only to
 #' confirm whether it is given or missing
 #' @param grid_size Size of interpolation grid as taken from 'add_osm_surface()'
@@ -238,15 +288,45 @@ add_osm_surface <- function (map, obj, dat, method="idw", grid_size=100,
 #' @return A single data frame of object IDs, coordinates, and z-values
 list2df_with_data <- function (map, xy, dat, bg, grid_size=100, method="idw")
 {
-    indx <- which (!is.na (dat [,3]))
-    x <- dat [indx,1]
-    y <- dat [indx,2]
-    marks <- dat [indx,3]
+    if ('z' %in% colnames (dat))
+        z <- dat [,'z']
+    else
+        z <- dat [,3]
+    if ('x' %in% colnames (dat))
+        x <- dat [,'x']
+    else
+        x <- dat [,pmatch ('lon', colnames (dat))]
+    if ('y' %in% colnames (dat))
+        y <- dat [,'y']
+    else
+        y <- dat [,pmatch ('lat', colnames (dat))]
+    xlims <- range (x) # used below to convert to indices into z-matrix
+    ylims <- range (y)
+    indx <- which (!is.na (z))
+    x <- x [indx]
+    y <- y [indx]
+    marks <- z [indx]
     xyp <- spatstat::ppp (x, y, xrange=range (x), yrange=range(y), marks=marks)
     if (method == 'idw')
         z <- spatstat::idw (xyp, at="pixels", dimyx=grid_size)$v
-    else
+    else if (method == 'smooth')
         z <- spatstat::Smooth (xyp, at="pixels", dimyx=grid_size, diggle=TRUE)$v
+    else
+    {
+        # x and y might not necessarily be regular, so grid has to be manually
+        # filled with z-values
+        nx <- length (unique (x))
+        ny <- length (unique (y))
+        arr <- array (NA, dim=c (nx, ny))
+        indx_x <- as.numeric (cut (x, nx))
+        indx_y <- as.numeric (cut (y, ny))
+        arr [(indx_y - 1) * nx + indx_x] <- z
+        z <- t (arr )
+        # z here, as for interp methods above, has
+        # (rows,cols)=(vert,horizont)=c(y,x) so is indexed (x, y). To yield a
+        # figure with horizontal x-axis, this is transformed below.
+    }
+    z <- t (z)
 
     # Get mean coordinates of each object in xy. 
     # TODO: Colour lines continuously according to the coordinates of each
@@ -271,23 +351,41 @@ list2df_with_data <- function (map, xy, dat, bg, grid_size=100, method="idw")
         # indx = 0 for outside polygon
     } 
 
-    # Then convert to integer indices into z
-    xymn [,1] <- ceiling (grid_size * 
-                          (xymn [,1] - map$coordinates$limits$x [1]) / 
-                          diff (map$coordinates$limits$x))
-    xymn [,2] <- ceiling (grid_size * 
-                          (xymn [,2] - map$coordinates$limits$y [1]) / 
-                          diff (map$coordinates$limits$y))
+    # Include only those objects within the limits of the map
+    indx_xy <- which (xymn [,1] >= map$coordinates$limits$x [1] &
+                      xymn [,1] <= map$coordinates$limits$x [2] &
+                      xymn [,2] >= map$coordinates$limits$y [1] &
+                      xymn [,2] <= map$coordinates$limits$y [2])
+    xymn <- xymn [indx_xy,]
+    indx <- indx [indx_xy]
+    # And reduce xy to that index
+    c2 <- class (xy) [2]
+    if ('points' %in% class (xy))
+        xy <- xy [indx_xy,]
+    else
+        xy <- xy [indx_xy]
+    xy <- structure (xy, class=c (class (xy), c2))
+
+    # Convert to integer indices into z. z spans the range of data, not
+    # necessarily the bbox
+    if (method == 'idw' | method == 'smooth')
+        nx <- ny <- grid_size
+    xymn [,1] <- ceiling (nx * (xymn [,1] - xlims [1]) / diff (xlims))
+    xymn [,2] <- ceiling (ny * (xymn [,2] - ylims [1]) / diff (ylims))
+
     if (missing (bg))
     {
-        xymn [xymn < 1] <- 1
-        xymn [xymn > grid_size] <- grid_size
+        xymn [,1] [xymn [,1] < 1] <- 1
+        xymn [,1] [xymn [,1] > nx] <- nx
+        xymn [,2] [xymn [,2] < 1] <- 1
+        xymn [,2] [xymn [,2] > ny] <- ny
     } else
     {
-        xymn [xymn < 1] <- NA
-        xymn [xymn > grid_size] <- NA
+        xymn [,1] [xymn [,1] < 1] <- NA
+        xymn [,1] [xymn [,1] > nx] <- NA
+        xymn [,2] [xymn [,2] < 1] <- NA
+        xymn [,2] [xymn [,2] > ny] <- NA
     }
-
 
     if ('polygons' %in% class (xy) | 'lines' %in% class (xy))
     {
@@ -303,13 +401,12 @@ list2df_with_data <- function (map, xy, dat, bg, grid_size=100, method="idw")
     }
     # And then to a data.frame, for which duplicated row names flag warnings
     # which are not relevant, so are suppressed by specifying new row names
-    xy <-  data.frame (
-                       id=xy [,1],
-                       lon=xy [,2],
-                       lat=xy [,3],
-                       z=xy [,4], 
-                       inp=xy [,5],
-                       row.names=1:nrow (xy)
-                       )
-    return (xy)
+    data.frame (
+                id=xy [,1],
+                lon=xy [,2],
+                lat=xy [,3],
+                z=xy [,4], 
+                inp=xy [,5],
+                row.names=1:nrow (xy)
+                )
 }

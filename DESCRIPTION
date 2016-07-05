@@ -1,10 +1,10 @@
 Package: osmplotr
 Title: Customisable Images of OpenStreetMap Data
-Version: 0.2.1
-Date: 2016-06-01
+Version: 0.2.2
+Date: 2016-07-04
 Authors@R: person("Mark", "Padgham", email = "mark.padgham@email.com", role = c("aut", "cre"))
-Description: Produces customisable images of OpenStreetMap (OSM) data and
-    enables data visualisation using OSM objects.
+Description: Customisable images of OpenStreetMap (OSM) data and
+    data visualisation using OSM objects.
 Depends: R (>= 3.2.3)
 Imports: ggm, ggplot2, igraph, httr, methods, osmar, rgeos, sp,
         spatstat, XML
@@ -16,8 +16,8 @@ LazyData: true
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-06-01 18:11:23 UTC; markus
+Packaged: 2016-07-04 19:30:36 UTC; markus
 Author: Mark Padgham [aut, cre]
 Maintainer: Mark Padgham <mark.padgham@email.com>
 Repository: CRAN
-Date/Publication: 2016-06-02 05:58:31
+Date/Publication: 2016-07-05 08:55:20

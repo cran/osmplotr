@@ -223,18 +223,18 @@ map <- add_osm_groups (map, dat_B, groups=groups, borderWidth=2,
 print_osm_map (map, filename='map_b13.png', width=600, units='px', dpi=72)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  cmat <- colour_mat (plot=TRUE)
+#  cmat <- colour_mat (rainbow (4), plot=TRUE)
 
 ## ---- fig.width=4, echo=FALSE--------------------------------------------
 plot.new ()
-cmat <- colour_mat (plot=TRUE)
+cmat <- colour_mat (rainbow (4), plot=TRUE)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  cmat <- colour_mat (n=c(4,8), rotate=90, plot=TRUE)
+#  cmat <- colour_mat (rainbow (4), n=c(4,8), rotate=90, plot=TRUE)
 
 ## ---- fig.width=4, echo=FALSE--------------------------------------------
 plot.new ()
-cmat <- colour_mat (n=c(4,8), rotate=90, plot=TRUE)
+cmat <- colour_mat (rainbow (4), n=c(4,8), rotate=90, plot=TRUE)
 
 ## ----map14, eval=FALSE---------------------------------------------------
 #  map <- osm_basemap (bbox=bbox, bg='gray95')
@@ -276,9 +276,9 @@ bg_H <- 'gray60'
 #  map <- osm_basemap (bbox=bbox, bg='gray20')
 #  map <- add_osm_objects (map, dat_P, col=col_park_out)
 #  map <- add_osm_groups (map, dat_B, groups=groups, boundary=1,
-#                     bg=bg_B, col=cols_B)
+#                     bg=bg_B, cols=cols_B)
 #  map <- add_osm_groups (map, dat_H, groups=groups, boundary=1,
-#                     bg=bg_H, col=cols_H)
+#                     bg=bg_H, cols=cols_H)
 #  map <- add_osm_groups (map, dat_HP, groups=groups, boundary=0,
 #                     cols=cols_H, bg=bg_H, size=1)
 #  print_osm_map (map)

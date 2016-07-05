@@ -41,10 +41,14 @@ extract_osm_objects <- function (key, value, extra_pairs, bbox, verbose=FALSE)
 {
     if (missing (key))
         stop ('key must be provided')
+    if (nchar (key) < 1)
+        stop ('key must be provided')
     if (missing (bbox))
         stop ('bbox must be provided')
     stopifnot (is.numeric (bbox))
     stopifnot (length (bbox) == 4)
+    if (!missing (value) & missing (key))
+        stop ('key must be provided for value')
 
     if (key == 'park')
     {
@@ -65,14 +69,17 @@ extract_osm_objects <- function (key, value, extra_pairs, bbox, verbose=FALSE)
     keyold <- key
     if (!missing (value))
     {
-        valold <- value
-        if (substring (value, 1, 1) == '!')
-            value <- paste0 ("['", key, "'!='", 
-                            substring (value, 2, nchar (value)), "']")
-        else if (key == 'name')
-            value <- paste0 ("['", key, "'~'", value, "']")
-        else
-            value <- paste0 ("['", key, "'='", value, "']")
+        if (value != '')
+        {
+            valold <- value
+            if (substring (value, 1, 1) == '!')
+                value <- paste0 ("['", key, "'!='", 
+                                substring (value, 2, nchar (value)), "']")
+            else if (key == 'name')
+                value <- paste0 ("['", key, "'~'", value, "']")
+            else
+                value <- paste0 ("['", key, "'='", value, "']")
+        }
     } else
         value <- ''
     if (key == 'name')
@@ -119,43 +126,44 @@ extract_osm_objects <- function (key, value, extra_pairs, bbox, verbose=FALSE)
     k <- v <- NULL # supress 'no visible binding' note from R CMD check
     if (verbose) message ('converting OSM data to omsar format')
     dato <- osmar::as_osmar (dat)
-    # A very important NOTE: It can arise the OSM relations have IDs which
-    # duplicate IDs in OSM ways, even through the two may bear no relationship
-    # at all. This causes the attempt in `osmar::as_sp` to force them to an `sp`
-    # object to crash because 
-    # # Error in validObject(.Object) :
-    # #   invalid class 'SpatialLines' object: non-unique Lines ID of slot values
-    # The IDs are actually neither needed not used, so the next lines simply
-    # modifies all relation IDs by pre-pending 'r' to avoid such problems:
-    for (i in seq (dato$relations))
-        if (nrow (dato$relations [[i]]) > 0)
-            dato$relations [[i]]$id <- paste0 ('r', dato$relations [[i]]$id)
-    if (nchar (key) > 0)
-        pids <- osmar::find (dato, osmar::way (osmar::tags(k == key)))
-    else if (!is.null (value))
-        pids <- osmar::find (dato, osmar::way (osmar::tags(v == value)))
-    
-    # spts converts to SpatialPoints, currently only for trees but easily
-    # extended
-    spts <- FALSE
-    if (!is.null (value))
-        if (value == 'tree') # no pids needed
-            spts <- TRUE
-
-    if (verbose) message ('converting osmar data to sp format')
-    if (spts)
-        obj <- osmar::as_sp (dato, 'points')
+    nvalid <- sum (summary (dato)$n)
+    if (nvalid <= 3)
+        warning (paste0 ('No valid data for (', key, ', ', value, ')'))
     else
     {
-        pids1 <- osmar::find_down (dato, osmar::way (pids))
-        pids2 <- osmar::find_up (dato, osmar::way (pids))
-        pids <- mapply (c, pids1, pids2, simplify=FALSE)
-        pids <- lapply (pids, function (i) unique (i))
-        nvalid <- sum (sapply (pids, length))
-        if (nvalid <= 3) # (nodes, ways, relations)
-            warning (paste0 ('No valid data for (', key, ', ', value, ')'))
+        # A very important NOTE: It can arise the OSM relations have IDs which
+        # duplicate IDs in OSM ways, even through the two may bear no relationship
+        # at all. This causes the attempt in `osmar::as_sp` to force them to an `sp`
+        # object to crash because 
+        # # Error in validObject(.Object) :
+        # #   invalid class 'SpatialLines' object: non-unique Lines ID of slot values
+        # The IDs are actually neither needed not used, so the next lines simply
+        # modifies all relation IDs by pre-pending 'r' to avoid such problems:
+        for (i in seq (dato$relations))
+            if (nrow (dato$relations [[i]]) > 0)
+                dato$relations [[i]]$id <- paste0 ('r', dato$relations [[i]]$id)
+        if (nchar (key) > 0)
+            pids <- osmar::find (dato, osmar::way (osmar::tags(k == key)))
+        else if (!is.null (value))
+            pids <- osmar::find (dato, osmar::way (osmar::tags(v == value)))
+        
+        # spts converts to SpatialPoints, currently only for trees but easily
+        # extended
+        spts <- FALSE
+        if (!is.null (value))
+            if (value == 'tree') # no pids needed
+                spts <- TRUE
+
+        if (verbose) message ('converting osmar data to sp format')
+        if (spts)
+            obj <- osmar::as_sp (dato, 'points')
         else
         {
+            pids1 <- osmar::find_down (dato, osmar::way (pids))
+            pids2 <- osmar::find_up (dato, osmar::way (pids))
+            pids <- mapply (c, pids1, pids2, simplify=FALSE)
+            pids <- lapply (pids, function (i) unique (i))
+
             obj <- subset (dato, ids = pids)
             # TODO: Extract names of objects (at least for streets, buildings)
 
@@ -164,7 +172,7 @@ extract_osm_objects <- function (key, value, extra_pairs, bbox, verbose=FALSE)
             else 
                 obj <- osmar::as_sp (obj, 'polygons')
         }
-    }
+    } # end if nvalid <= 3
 
     return (obj)
 }
