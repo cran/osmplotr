@@ -21,113 +21,69 @@
 #'
 #' @examples
 #' bbox <- get_bbox (c (-0.13, 51.5, -0.11, 51.52))
-#' map <- osm_basemap (bbox=bbox, bg="gray20")
+#' map <- osm_basemap (bbox = bbox, bg = "gray20")
 #'
 #' \dontrun{
 #' # The 'london' data used below were downloaded as:
-#' dat_BNR <- extract_osm_objects (bbox=bbox, key='building',
-#'                                 value='!residential')
-#' dat_HP <- extract_osm_objects (bbox=bbox, key='highway',
-#'                                value='primary')
-#' dat_T <- extract_osm_objects (bbox=bbox, key='tree')
+#' dat_BNR <- extract_osm_objects (bbox = bbox, key = 'building',
+#'                                 value = '!residential')
+#' dat_HP <- extract_osm_objects (bbox = bbox, key = 'highway',
+#'                                value = 'primary')
+#' dat_T <- extract_osm_objects (bbox = bbox, key = 'tree')
 #' }
-#' map <- add_osm_objects (map, obj=london$dat_BNR, col="gray40", border="yellow") 
-#' map <- add_osm_objects (map, obj=london$dat_HP, col="gray80",
-#'                         size=1, shape=2)
-#' map <- add_osm_objects (map, london$dat_T, col="green", size=2, shape=1)
+#' map <- add_osm_objects (map, obj = london$dat_BNR, col = "gray40", border = "yellow") 
+#' map <- add_osm_objects (map, obj = london$dat_HP, col = "gray80",
+#'                         size = 1, shape = 2)
+#' map <- add_osm_objects (map, london$dat_T, col = "green", size = 2, shape = 1)
 #' print_osm_map (map)
 #' 
 #' # Polygons with different coloured borders
-#' map <- osm_basemap (bbox=bbox, bg="gray20")
-#' map <- add_osm_objects (map, obj=london$dat_HP, col="gray80")
-#' map <- add_osm_objects (map, london$dat_T, col="green")
-#' map <- add_osm_objects (map, obj=london$dat_BNR, col="gray40", border="yellow", 
-#'                         size=0.5)
+#' map <- osm_basemap (bbox = bbox, bg = "gray20")
+#' map <- add_osm_objects (map, obj = london$dat_HP, col = "gray80")
+#' map <- add_osm_objects (map, london$dat_T, col = "green")
+#' map <- add_osm_objects (map, obj = london$dat_BNR, col = "gray40", border = "yellow", 
+#'                         size = 0.5)
 #' print_osm_map (map)
 
-add_osm_objects <- function (map, obj, col='gray40', border=NA, size,
-                             shape)
+add_osm_objects <- function (map, obj, col = 'gray40', border = NA, size, shape)
 {
     # ---------------  sanity checks and warnings  ---------------
-    if (missing (map))
-        stop ('map must be supplied to add_osm_objects')
-    if (!is (map, 'ggplot'))
-        stop ('map must be a ggplot2 object')
-    if (missing (obj))
-        stop ('object must be supplied to add_osm_objects')
-    if (!inherits (obj, 'Spatial'))
-        stop ('obj must be a spatial object')
-    if (is.null (col)) stop ('col is NULL')
-    tryCatch (
-              col2rgb (col),
-              error = function (e) 
-              {
-                  e$message <-  paste0 ("Invalid colour: ", col)
-                  stop (e)
-              })
-    tryCatch (
-              col2rgb (border),
-              error = function (e) 
-              {
-                  e$message <-  paste0 ("Invalid border colour: ", border)
-                  stop (e)
-              })
-    # ------- size & shape
-    if (class (obj) == 'SpatialPolygonsDataFrame')
-        size_default <- 0
-    else
-    {
-        size_default <- 0.5
-        if (class (obj) == 'SpatialLinesDataFrame')
-            shape_default <- 1
-        else if (class (obj) == 'SpatialPointsDataFrame')
-            shape_default <- 19
-        if (missing (shape)) shape <- shape_default
-        else if (!is.numeric (shape))
-        {
-            warning ("shape should be numeric; defaulting to ", shape_default)
-            shape <- shape_default
-        } else if (shape < 0)
-        {
-            warning ("shape should be positive; defaulting to ", shape_default)
-            shape <- shape_default
-        }
-    }
-    if (missing (size)) size <- size_default
-    else if (!is.numeric (size))
-    {
-        warning ("size should be numeric; defaulting to ", size_default)
-        size <- size_default
-    } else if (size < 0)
-    {
-        warning ("size should be positive; defaulting to ", size_default)
-        size <- size_default
-    }
+    check_map_arg (map)
+    check_obj_arg (obj)
+    check_col_arg (col)
+    if (length (col) == 0)
+        stop ('a non-null col must be provided')
+    check_col_arg (border)
     # ---------------  end sanity checks and warnings  ---------------
 
+    obj_type <- get_obj_type (obj)
+    # Then a couple more checks using obj_type:
+    shape <- default_shape (obj_type, shape)
+    size <- default_size (obj_type, size)
+
     lon <- lat <- id <- NULL # suppress 'no visible binding' error
-    if (class (obj) == 'SpatialPolygonsDataFrame')
+
+    # convert sf/sp geometries to simple list of matrices
+    xy <- geom_to_xy (obj, obj_type)
+
+    if (grepl ('polygon', obj_type))
     {
-        xy <- lapply (slot (obj, "polygons"), function (x)
-                      slot (slot (x, "Polygons") [[1]], "coords"))
         xy <- list2df (xy)
-        map <- map + ggplot2::geom_polygon (ggplot2::aes (group=id), 
-                                                      data=xy, size=size,
-                                                      fill=col, colour=border)
-    } else if (class (obj) == 'SpatialLinesDataFrame')
+        map <- map + ggplot2::geom_polygon (ggplot2::aes (group = id),
+                                                      data = xy, size = size,
+                                                      fill = col,
+                                                      colour = border)
+    } else if (grepl ('line', obj_type))
     {
-        xy <- lapply (slot (obj, 'lines'), function (x)
-                      slot (slot (x, 'Lines') [[1]], 'coords'))
-        xy <- list2df (xy, islines=TRUE)
-        map <- map + ggplot2::geom_path (data=xy,
-                                   ggplot2::aes (x=lon, y=lat), 
-                                   colour=col, size=size, linetype=shape)
-    } else if (class (obj) == 'SpatialPointsDataFrame')
+        xy <- list2df (xy, islines = TRUE)
+        map <- map + ggplot2::geom_path (data = xy,
+                                   ggplot2::aes (x = lon, y = lat),
+                                   colour = col, size = size, linetype = shape)
+    } else if (grepl ('point', obj_type))
     {
-        xy <- data.frame (slot (obj, 'coords'))
-        map <- map + ggplot2::geom_point (data=xy,
-                                    ggplot2::aes (x=lon, y=lat),
-                                    col=col, size=size, shape=shape)
+        map <- map + ggplot2::geom_point (data = xy,
+                                    ggplot2::aes (x = lon, y = lat),
+                                    col = col, size = size, shape = shape)
     } else
         stop ("obj is not a spatial class")
 
@@ -141,21 +97,98 @@ add_osm_objects <- function (map, obj, col='gray40', border=NA, size,
 #' @param xy A list of coordinates extracted from an sp object
 #' @param islines Set to TRUE for spatial lines, otherwise FALSE
 #' @return data frame
-list2df <- function (xy, islines=FALSE)
+#'
+#' @noRd
+list2df <- function (xy, islines = FALSE)
 {
     if (islines) # lines have to be separated by NAs
         xy <- lapply (xy, function (i) rbind (i, rep (NA, 2)))
     else # Add id column to each:
         for (i in seq (xy))
             xy [[i]] <- cbind (i, xy [[i]])
-    # And rbind them to a single matrix. 
+    # And rbind them to a single matrix.
     xy <-  do.call (rbind, xy)
     # And then to a data.frame, for which duplicated row names flag warnings
     # which are not relevant, so are suppressed by specifying new row names
-    xy <-  data.frame (xy, row.names=1:nrow (xy))
+    xy <-  data.frame (xy, row.names = seq (nrow (xy)))
     if (islines) # remove terminal row of NAs
-        xy <- xy [1:(nrow (xy) - 1),]
+        xy <- xy [1:(nrow (xy) - 1), ]
     else
         names (xy) <- c ("id", "lon", "lat")
+    return (xy)
+}
+
+#' convert shape to default values dependent on class of obj
+#'
+#' @noRd
+default_shape <- function (obj_type, shape)
+{
+    shape_default <- NULL
+    if (grepl ('line', obj_type))
+        shape_default <- 1
+    else if (grepl ('point', obj_type))
+        shape_default <- 19
+
+    ret <- NULL
+    if (!is.null (shape_default))
+    {
+        if (!missing (shape))
+        {
+            if (!is.numeric (shape))
+                warning ("shape should be numeric; defaulting to ",
+                         shape_default)
+            else if (shape < 0)
+                warning ("shape should be positive; defaulting to ",
+                         shape_default)
+        }
+        ret <- shape_default
+    }
+
+    return (ret)
+}
+
+#' convert size to default values dependent on class of obj
+#'
+#' @noRd
+default_size <- function (obj, size)
+{
+    size_default <- 0
+    if (!grepl ('polygon', get_obj_type (obj)))
+        size_default <- 0.5
+
+    if (missing (size))
+        size <- size_default
+    else if (!is.numeric (size))
+    {
+        warning ("size should be numeric; defaulting to ", size_default)
+        size <- size_default
+    } else if (size < 0)
+    {
+        warning ("size should be positive; defaulting to ", size_default)
+        size <- size_default
+    }
+
+    return (size)
+}
+
+#' return geometries of sf/sp objects as lists of matrices
+#'
+#' @noRd
+geom_to_xy <- function (obj, obj_type)
+{
+    if (obj_type == 'polygon') # sf
+        xy <- lapply (obj$geometry, function (i) i [[1]])
+    else if (obj_type == 'linestring') # sf
+        xy <- lapply (obj$geometry, function (i) as.matrix (i))
+    else if (obj_type == 'point') # sf
+    {
+        xy <- data.frame (do.call (rbind, lapply (obj$geometry, as.numeric)))
+        names (xy) <- c ('lon', 'lat')
+    } else if (obj_type %in% c ('polygons', 'lines')) # sp
+        xy <- lapply (slot (obj, obj_type), function (x)
+                      slot (slot (x, cap_first (obj_type)) [[1]], "coords"))
+    else if (obj_type == 'points') # sp
+        xy <- data.frame (slot (obj, 'coords'))
+
     return (xy)
 }

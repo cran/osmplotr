@@ -4,10 +4,14 @@
 \alias{extract_osm_objects}
 \title{extract_osm_objects}
 \usage{
-extract_osm_objects(key, value, extra_pairs, bbox, return_type,
-  verbose = FALSE)
+extract_osm_objects(bbox, key, value, extra_pairs, return_type, sf = TRUE,
+  geom_only = FALSE, verbose = FALSE)
 }
 \arguments{
+\item{bbox}{the bounding box within which all key-value objects should be
+downloaded.  A 2-by-2 matrix of 4 elements with columns of min and
+max values, and rows of x and y values.}
+
 \item{key}{OSM key to search for. Useful keys include \code{building},
 \code{waterway}, \code{natural}, \code{grass}, \code{park}, \code{amenity},
 \code{shop}, \code{boundary}, and \code{highway}. Others will be passed
@@ -19,15 +23,18 @@ returned.  Negation is specified by \code{!value}.}
 \item{extra_pairs}{A list of additional \code{key-value} pairs to be passed
 to the overpass API.}
 
-\item{bbox}{the bounding box within which all key-value objects should be
-downloaded.  A 2-by-2 matrix of 4 elements with columns of min and
-max values, and rows of x and y values.}
-
 \item{return_type}{If specified, force return of spatial (\code{point},
-\code{line}, \code{polygon}) objects. \code{return_type='line'} will, for
-example, always return a SpatialLinesDataFrame. If not specified, defaults to
-'sensible' values (for example, \code{lines} for highways, \code{points} for
-trees, \code{polygons} for bulidings).}
+\code{line}, \code{polygon}, \code{multiline}, \code{multipolygon}) objects.
+\code{return_type = 'line'} will, for example, always return a
+SpatialLinesDataFrame. If not specified, defaults to 'sensible' values (for
+example, \code{lines} for highways, \code{points} for trees, \code{polygons}
+for bulidings).}
+
+\item{sf}{If \code{TRUE}, return Simple Features (\code{sf}) objects;
+otherwise Spatial (\code{sp}) objects.}
+
+\item{geom_only}{If \code{TRUE}, return only those OSM data describing the
+geometric object; otherwise return all data describing each object.}
 
 \item{verbose}{If \code{TRUE}, provides notification of progress.}
 }
@@ -38,23 +45,22 @@ or \code{SpatialPolygonsDataFrame}.
 \description{
 Downloads OSM XML objects and converts to \code{sp} objects
 (\code{SpatialPointsDataFrame}, \code{SpatialLinesDataFrame}, or
-\code{SpatialPolygonsDataFrame}).  Requires intermediate conversion to osmar
-object which can be quite slow, as can final conversion to \code{sp} objects
-for large numbers of objects
+\code{SpatialPolygonsDataFrame}).
 }
 \examples{
 \dontrun{
 bbox <- get_bbox (c(-0.13,51.50,-0.11,51.52))
-dat_B <- extract_osm_objects (key='building', bbox=bbox)
-dat_H <- extract_osm_objects (key='highway', bbox=bbox)
-dat_BR <- extract_osm_objects (key='building', value='residential', bbox=bbox)
-dat_HP <- extract_osm_objects (key='highway', value='primary', bbox=bbox)
-dat_HNP <- extract_osm_objects (key='highway', value='!primary', bbox=bbox)
+dat_B <- extract_osm_objects (key = 'building', bbox = bbox)
+dat_H <- extract_osm_objects (key = 'highway', bbox = bbox)
+dat_BR <- extract_osm_objects (key = 'building', value = 'residential',
+                               bbox = bbox)
+dat_HP <- extract_osm_objects (key = 'highway', value = 'primary', bbox = bbox)
+dat_HNP <- extract_osm_objects (key = 'highway', value = '!primary', bbox = bbox)
 extra_pairs <- c ('name', 'Royal.Festival.Hall')
-dat <- extract_osm_objects (key='building', extra_pairs=extra_pairs, bbox=bbox)
+dat <- extract_osm_objects (key = 'building', extra_pairs = extra_pairs,
+                            bbox = bbox)
 }
 }
 \seealso{
 \code{\link{add_osm_objects}}.
 }
-

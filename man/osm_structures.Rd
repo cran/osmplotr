@@ -21,7 +21,7 @@ corresponding prefixes, and colours.
 \description{
 For the given vector of structure types returns a \code{data.frame}
 containing two columns of corresponding OpenStreetMap \code{key-value} pairs,
-one column of unambiguous suffices to be appended to the objects returned by
+one column of unambiguous suffixes to be appended to the objects returned by
 \code{\link{extract_osm_objects}}, and one column specifying colours. This
 \code{data.frame} may be subsequently modified as desired, and ultimately
 passed to \code{\link{make_osm_map}} to automate map production.
@@ -31,13 +31,12 @@ passed to \code{\link{make_osm_map}} to automate map production.
 osm_structures ()
 # user-defined structures:
 structures <- c ('highway', 'park', 'grass')
-structs <- osm_structures (structures=structures, col_scheme='light')
+structs <- osm_structures (structures = structures, col_scheme = 'light')
 # make_osm_map returns potentially modified list of data
-dat <- make_osm_map (osm_data=london, structures=structs)
+dat <- make_osm_map (osm_data = london, structures = structs)
 # map contains updated $osm_data and actual map in $map
 print_osm_map (dat$map)
 }
 \seealso{
 \code{\link{make_osm_map}}.
 }
-
