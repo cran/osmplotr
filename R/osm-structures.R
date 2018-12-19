@@ -22,12 +22,14 @@
 #' # Default structures:
 #' osm_structures ()
 #' # user-defined structures:
-#' structures <- c ('highway', 'park', 'grass')
+#' structures <- c ('highway', 'park', 'ameniiy', 'tree')
 #' structs <- osm_structures (structures = structures, col_scheme = 'light')
 #' # make_osm_map returns potentially modified list of data
+#' \dontrun{
 #' dat <- make_osm_map (osm_data = london, structures = structs)
 #' # map contains updated $osm_data and actual map in $map
 #' print_osm_map (dat$map)
+#' }
 osm_structures <- function (structures = c ('building', 'amenity', 'waterway',
                          'grass', 'natural', 'park', 'highway', 'boundary',
                          'tree'), col_scheme = 'dark')
@@ -71,7 +73,7 @@ get_key_vals <- function (structures)
     keys <- structures
     values <- rep ('', length (keys))
     val_list <- c ('grass', 'park', 'tree', 'water')
-    key_list <- c ('landuse', 'leisure', 'natural', 'ntural')
+    key_list <- c ('landuse', 'leisure', 'natural', 'natural')
 
     for (i in seq (val_list))
         if (any (structures == val_list [i]))

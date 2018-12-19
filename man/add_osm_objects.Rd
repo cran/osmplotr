@@ -4,7 +4,8 @@
 \alias{add_osm_objects}
 \title{add_osm_objects}
 \usage{
-add_osm_objects(map, obj, col = "gray40", border = NA, size, shape)
+add_osm_objects(map, obj, col = "gray40", border = NA, hcol, size,
+  shape)
 }
 \arguments{
 \item{map}{A \code{ggplot2} object to which the objects are to be added.}
@@ -16,12 +17,14 @@ typically as returned by \code{\link{extract_osm_objects}}.}
 
 \item{border}{Border colour of polygons.}
 
+\item{hcol}{(Multipolygons only) Vector of fill colours for holes}
+
 \item{size}{Size argument passed to \code{ggplot2} (polygon, path, point)
 functions: determines width of lines for (polygon, line), and sizes of
 points.  Respective defaults are (0, 0.5, 0.5).}
 
 \item{shape}{Shape of points or lines (the latter passed as \code{linetype});
-see \code{?ggplot2::shape}.}
+see \code{\link[ggplot2]{shape}}.}
 }
 \value{
 modified version of \code{map} to which objects have been added.

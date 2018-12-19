@@ -252,6 +252,16 @@ map <- add_osm_objects (map, dat_ST, col = 'skyblue', border = 'blue', size = 2)
 print_osm_map (map, filename = 'map_a7.png', width = 600,
                units = 'px', dpi = map_dpi)
 
+## ---- eval = FALSE-------------------------------------------------------
+#  library (osmdata)
+#  bb <- osmdata::getbb ("melbourne, australia")
+#  coast <- extract_osm_objects (bbox = bb, key = "natural", value = "coastline",
+#                                return_type = "line")
+#  coast <- osm_line2poly (coast, bbox = bb)
+#  map <- osm_basemap (bbox = bb) %>%
+#          add_osm_objects (coast [[1]], col = "lightsteelblue") %>%
+#          print_osm_map ()
+
 ## ----map8, eval = FALSE--------------------------------------------------
 #  structs <- c ('highway', 'building', 'park', 'tree')
 #  structures <- osm_structures (structures = structs, col_scheme = 'light')

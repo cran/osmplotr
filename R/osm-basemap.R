@@ -5,13 +5,18 @@
 #'
 #' @param bbox bounding box (Latitude-longitude range) to be plotted.  A 2-by-2
 #' matrix of 4 elements with columns of min and max values, and rows of x and y
-#' values.
+#' values. Can also be an object of class \code{sf}, for example as returned
+#' from \code{extract_osm_objects} or the \code{osmdata} package, in which case
+#' the bounding box will be extracted from the object coordinates.
 #' @param structures Data frame returned by \code{\link{osm_structures}} used
 #' here to specify background colour of plot; if missing, the colour is
 #' specified by \code{bg}.
 #' @param bg Background colour of map (default = \code{gray20}) only if
 #' \code{structs} not given).
 #' @return A \code{ggplot2} object containing the base \code{map}.
+#' @importFrom ggplot2 ggplot coord_map aes scale_x_continuous
+#' scale_y_continuous theme_minimal element_rect element_blank margin unit
+#' @importFrom mapproj mapproject
 #' @export
 #'
 #' @seealso \code{\link{add_osm_objects}}, \code{\link{make_osm_map}}.
@@ -41,11 +46,8 @@ osm_basemap <- function (bbox, structures, bg = 'gray20')
     map_theme <- set_map_theme (bg = bg)
 
     lon <- lat <- NA
-    # coord_map uses mapproj::mapproject, but this can't be added as a
-    # dependency because it's not explicitly called, so coord_equal is a
-    # workaround.
     map <- ggplot2::ggplot () + map_theme +
-                ggplot2::coord_equal (xlim = range (bbox[1, ]),
+                ggplot2::coord_map (xlim = range (bbox[1, ]),
                                     ylim = range (bbox[2, ])) +
                 ggplot2::aes (x = lon, y = lat) +
                 ggplot2::scale_x_continuous (expand = c(0, 0)) +

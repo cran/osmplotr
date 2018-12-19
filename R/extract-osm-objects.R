@@ -25,7 +25,7 @@
 #' otherwise Spatial (\code{sp}) objects.
 #' @param geom_only If \code{TRUE}, return only those OSM data describing the
 #' geometric object; otherwise return all data describing each object.
-#' @param verbose If \code{TRUE}, provides notification of progress.
+#' @param quiet If \code{FALSE}, provides notification of progress.
 #'
 #' @return Either a \code{SpatialPointsDataFrame}, \code{SpatialLinesDataFrame},
 #' or \code{SpatialPolygonsDataFrame}.
@@ -48,7 +48,7 @@
 #' }
 extract_osm_objects <- function (bbox, key, value, extra_pairs,
                                  return_type, sf = TRUE,
-                                 geom_only = FALSE, verbose = FALSE)
+                                 geom_only = FALSE, quiet = FALSE)
 {
     check_arg (key, 'key', 'character')
 
@@ -103,12 +103,12 @@ extract_osm_objects <- function (bbox, key, value, extra_pairs,
         if (!is.na (q_vals [i]) & substring (q_vals [i], 1, 1) == '!')
             key_exact <- TRUE
         if (is.na (q_vals [i]))
-            qry <- osmdata::add_feature (qry, key = q_keys [i],
+            qry <- osmdata::add_osm_feature (qry, key = q_keys [i],
                                          key_exact = key_exact,
                                          value_exact = FALSE,
                                          match_case = FALSE)
         else
-            qry <- osmdata::add_feature (qry, key = q_keys [i],
+            qry <- osmdata::add_osm_feature (qry, key = q_keys [i],
                                          value = q_vals [i],
                                          key_exact = key_exact,
                                          value_exact = FALSE,
@@ -116,9 +116,9 @@ extract_osm_objects <- function (bbox, key, value, extra_pairs,
     }
 
     if (sf)
-        obj <- osmdata::osmdata_sf (qry)
+        obj <- osmdata::osmdata_sf (qry, quiet = quiet)
     else
-        obj <- osmdata::osmdata_sp (qry)
+        obj <- osmdata::osmdata_sp (qry, quiet = quiet)
 
     if (!missing (return_type))
     {

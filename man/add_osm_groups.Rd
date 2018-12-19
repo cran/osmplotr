@@ -4,8 +4,8 @@
 \alias{add_osm_groups}
 \title{add_osm_groups}
 \usage{
-add_osm_groups(map, obj, groups, cols, bg, make_hull = FALSE, boundary = -1,
-  size, shape, border_width, colmat, rotate)
+add_osm_groups(map, obj, groups, cols, bg, make_hull = FALSE,
+  boundary = -1, size, shape, border_width = 1, colmat, rotate)
 }
 \arguments{
 \item{map}{A \code{ggplot2} object to which the grouped objects are to be
@@ -41,7 +41,7 @@ functions: determines width of lines for (polygon, line), and sizes of
 points.  Respective defaults are (0, 0.5, 0.5).}
 
 \item{shape}{Shape of points or lines (the latter passed as \code{linetype});
-see \code{?ggplot2::shape}.}
+see \code{\link[ggplot2]{shape}}.}
 
 \item{border_width}{If given, draws convex hull borders around entire groups
 in same colours as groups (try values around 1-2).}

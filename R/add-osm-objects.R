@@ -9,12 +9,14 @@
 #' typically as returned by \code{\link{extract_osm_objects}}.
 #' @param col Colour of lines or points; fill colour of polygons.
 #' @param border Border colour of polygons.
+#' @param hcol (Multipolygons only) Vector of fill colours for holes
 #' @param size Size argument passed to \code{ggplot2} (polygon, path, point)
 #' functions: determines width of lines for (polygon, line), and sizes of
 #' points.  Respective defaults are (0, 0.5, 0.5).
 #' @param shape Shape of points or lines (the latter passed as \code{linetype});
-#' see \code{?ggplot2::shape}.
+#' see \code{\link[ggplot2]{shape}}.
 #' @return modified version of \code{map} to which objects have been added.
+#' @importFrom ggplot2 geom_polygon geom_path aes geom_point
 #' @export
 #'
 #' @seealso \code{\link{osm_basemap}}, \code{\link{extract_osm_objects}}.
@@ -45,7 +47,8 @@
 #'                         size = 0.5)
 #' print_osm_map (map)
 
-add_osm_objects <- function (map, obj, col = 'gray40', border = NA, size, shape)
+add_osm_objects <- function (map, obj, col = 'gray40', border = NA, hcol,
+                             size, shape)
 {
     # ---------------  sanity checks and warnings  ---------------
     check_map_arg (map)
@@ -63,11 +66,44 @@ add_osm_objects <- function (map, obj, col = 'gray40', border = NA, size, shape)
 
     lon <- lat <- id <- NULL # suppress 'no visible binding' error
 
-    # convert sf/sp geometries to simple list of matrices
-    xy <- geom_to_xy (obj, obj_type)
 
-    if (grepl ('polygon', obj_type))
+    if (obj_type == "multipolygon") # sf
     {
+        for (i in seq (nrow (obj)))
+        {
+            #xy <- lapply (obj$geometry [[i]], function (i) i [[1]])
+            xy <- obj$geometry [[i]] [[1]]
+            # if only one polygon in multipolygon, which can happen:
+            if (!is.list (xy))
+                xy <- list (xy)
+            xy <- list2df (xy)
+            xy1 <- xy [which (xy$id == 1), ]
+            xy_not1 <- xy [which (xy$id != 1), ]
+
+            map <- map + ggplot2::geom_polygon (ggplot2::aes (group = id),
+                                                data = xy1, size = size,
+                                                fill = col, colour = border)
+
+            if (nrow (xy_not1) > 0)
+            {
+                if (missing (hcol))
+                    hcol <- map$theme$panel.background$fill
+                hcol <- rep (hcol, length.out = length (unique (xy_not1$id)))
+                hcols <- NULL
+                ids <- unique (xy_not1$id)
+                for (i in seq (ids))
+                {
+                    n <- length (which (xy_not1$id == ids [i]))
+                    hcols <- c (hcols, rep (hcol [i], n))
+                }
+                map <- map + ggplot2::geom_polygon (ggplot2::aes (group = id),
+                                                    data = xy_not1,
+                                                    fill = hcols)
+            }
+        }
+    } else if (grepl ('polygon', obj_type))
+    {
+        xy <- geom_to_xy (obj, obj_type)
         xy <- list2df (xy)
         map <- map + ggplot2::geom_polygon (ggplot2::aes (group = id),
                                                       data = xy, size = size,
@@ -75,12 +111,14 @@ add_osm_objects <- function (map, obj, col = 'gray40', border = NA, size, shape)
                                                       colour = border)
     } else if (grepl ('line', obj_type))
     {
+        xy <- geom_to_xy (obj, obj_type)
         xy <- list2df (xy, islines = TRUE)
         map <- map + ggplot2::geom_path (data = xy,
                                    ggplot2::aes (x = lon, y = lat),
                                    colour = col, size = size, linetype = shape)
     } else if (grepl ('point', obj_type))
     {
+        xy <- geom_to_xy (obj, obj_type)
         map <- map + ggplot2::geom_point (data = xy,
                                     ggplot2::aes (x = lon, y = lat),
                                     col = col, size = size, shape = shape)
@@ -106,6 +144,9 @@ list2df <- function (xy, islines = FALSE)
     else # Add id column to each:
         for (i in seq (xy))
             xy [[i]] <- cbind (i, xy [[i]])
+    # multiline/polygon names can be very long, prompting a strange R warning
+    # when rbind'ing them, so
+    names (xy) <- NULL
     # And rbind them to a single matrix.
     xy <-  do.call (rbind, xy)
     # And then to a data.frame, for which duplicated row names flag warnings

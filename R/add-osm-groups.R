@@ -27,7 +27,7 @@
 #' functions: determines width of lines for (polygon, line), and sizes of
 #' points.  Respective defaults are (0, 0.5, 0.5).
 #' @param shape Shape of points or lines (the latter passed as \code{linetype});
-#' see \code{?ggplot2::shape}.
+#' see \code{\link[ggplot2]{shape}}.
 #' @param border_width If given, draws convex hull borders around entire groups
 #' in same colours as groups (try values around 1-2).
 #' @param colmat If \code{TRUE} generates colours according to
@@ -36,6 +36,7 @@
 #' @param rotate Passed to \code{colour_mat} to rotate colours by the specified
 #' number of degrees clockwise.
 #' @return Modified version of \code{map} with groups added.
+#' @importFrom ggplot2 aes geom_polygon geom_path
 #' @export
 #'
 #' @section Note:
@@ -107,7 +108,7 @@
 #' }
 
 add_osm_groups <- function (map, obj, groups, cols, bg, make_hull = FALSE,
-                            boundary = -1, size, shape, border_width,
+                            boundary = -1, size, shape, border_width = 1,
                             colmat, rotate)
 {
     # ---------------  sanity checks and warnings  ---------------
@@ -404,13 +405,36 @@ trim_obj_to_map <- function (obj, map, obj_type)
         xy_mn <- obj
     } else
     {
-        xylims <- lapply (obj, function (i)
-                          c (apply (i, 2, min), apply (i, 2, max)))
-        xylims <- do.call (rbind, xylims)
+        # remove objects that extend beyond map:
+        #xylims <- lapply (obj, function (i)
+        #                  c (apply (i, 2, min), apply (i, 2, max)))
+        #xylims <- do.call (rbind, xylims)
 
-        indx <- which (xylims [, 1] > xrange [1] & xylims [, 2] > yrange [1] &
-                       xylims [, 3] < xrange [2] & xylims [, 4] < yrange [2])
-        obj <- obj [indx]
+        #indx <- which (xylims [, 1] > xrange [1] & xylims [, 2] > yrange [1] &
+        #               xylims [, 3] < xrange [2] & xylims [, 4] < yrange [2])
+        #obj <- obj [indx]
+
+        # trim objects to extent of map
+        obj <- lapply (obj, function (i) {
+                           indx <- which (i [, 1] > xrange [1] &
+                                          i [, 2] > yrange [1] &
+                                          i [, 1] < xrange [2] &
+                                          i [, 2] < yrange [2])
+                           if (length (indx) < 2)
+                               ret <- NULL
+                           else if (length (indx) < nrow (i))
+                           {
+                               ret <- i [indx, ]
+                               if (grepl ("polygon", obj_type))
+                                   ret <- rbind (ret, i [1, ])
+                           }
+                           else
+                               ret <- i
+
+                           return (ret)
+                       })
+        indx <- which (vapply (obj, is.null, logical (1)))
+        obj [indx] <- NULL
 
         # mean coordinates for every item in obj:
         xy_mn <- do.call (rbind, lapply (obj, function (x) colMeans (x)))
@@ -532,9 +556,6 @@ membs_single_group <- function (groups, coords, obj_trim, cent_bdry)
     membs <- sapply (coords, function (i)
                      {
                          temp <- i [, 3:ncol (i), drop = FALSE]
-                         if (!is.matrix (temp))
-                             temp <- matrix (temp, ncol = 1,
-                                             nrow = length (temp))
                          temp [temp > 1] <- 1
                          n <- colSums (temp)
                          if (max (n) < 3) # must have > 2 elements in group
@@ -587,9 +608,6 @@ membs_multiple_groups_bdry <- function (coords, boundary)
     membs <- lapply (coords, function (i)
                      {
                          temp <- i [, 3:ncol (i), drop = FALSE]
-                         if (!is.matrix (temp))
-                             temp <- matrix (temp, ncol = 1,
-                                             nrow = length (temp))
                          temp [temp > 1] <- 1
                          n <- colSums (temp)
                          if (boundary < 0)
@@ -618,10 +636,7 @@ membs_multiple_groups <- function (coords)
 {
     split_objs <- sapply (coords, function (i)
                           {
-                              temp <- i [, 3:ncol (i)]
-                              if (!is.matrix (temp))
-                                  temp <- matrix (temp, ncol = 1,
-                                                  nrow = length (temp))
+                              temp <- i [, 3:ncol (i), drop = FALSE]
                               temp [temp > 1] <- 1
                               n <- colSums (temp)
                               if (max (n) > 0 & max (n) < nrow (temp))
@@ -633,20 +648,17 @@ membs_multiple_groups <- function (coords)
 
     # Then split coords into 2 lists, one for non-split objects and one
     # containing those listed in split_objs
-    coords_split <- lapply (split_objs, function (i) coords [[i]])
-    indx <- seq (coords) [!seq (coords) %in% split_objs]
-    coords <- lapply (indx, function (i) coords [[i]])
-    # Then make new lists of xy and memberships by spliiting objects in
+    coords_split <- coords [split_objs]
+    coords <- coords [-split_objs] 
+    # Then make new lists of xy and memberships by spliting objects in
     # coords_split. These lists are of unknown length, requiring an
     # unsightly double loop.
     xy <- list ()
     membs <- NULL
     for (i in coords_split)
     {
-        temp <- i [, 3:ncol (i)]
+        temp <- i [, 3:ncol (i), drop = FALSE]
         temp [temp > 1] <- 1
-        if (!is.matrix (temp))
-            temp <- matrix (temp, ncol = 1, nrow = length (temp))
         n <- colSums (temp)
         if (max (n) < 3)
         {
@@ -677,10 +689,7 @@ membs_multiple_groups <- function (coords)
     xy <- c (xy, lapply (coords, function (i) i [, 1:2]))
     membs2 <- sapply (coords, function (i)
                       {
-                          temp <- i [, 3:ncol (i)]
-                          if (!is.matrix (temp))
-                              temp <- matrix (temp, ncol = 1,
-                                              nrow = length (temp))
+                          temp <- i [, 3:ncol (i), drop = FALSE]
                           temp [temp > 1] <- 1
                           n <- colSums (temp)
                           if (max (n) < nrow (temp))
@@ -752,42 +761,40 @@ map_plus_spLinedf_grps <- function (map, xyflat, aes, cols, size, shape) #nolint
 #' draw convex hulls around groups on map
 #'
 #' @noRd
-map_plus_hulls <- function (map, border_width, groups, xyflat, cols)
+map_plus_hulls <- function (map, border_width = 1, groups, xyflat, cols)
 {
 
     id <- NULL # suppress R CMD check note for aes (..,`group = id`) below
-    if (!missing (border_width)) # draw hulls around entire groups
-    {
-        if (!is.numeric (border_width))
-            return (map)
+    if (!is.numeric (border_width))
+        return (map)
 
-        bdry <- list ()
-        for (i in seq (groups))
+    bdry <- list ()
+    for (i in seq (groups))
+    {
+        indx <- which (xyflat$col == i) # col = group membership
+        if (length (indx) > 1)
         {
-            indx <- which (xyflat$col == i) # col = group membership
-            if (length (indx) > 1)
-            {
-                x <- xyflat$lon [indx]
-                y <- xyflat$lat [indx]
-                indx <- which (!duplicated (cbind (x, y)))
-                x <- x [indx]
-                y <- y [indx]
+            x <- xyflat$lon [indx]
+            y <- xyflat$lat [indx]
+            indx <- which (!duplicated (cbind (x, y)))
+            x <- x [indx]
+            y <- y [indx]
+            if (length (x) > 2) {
                 xy2 <- spatstat::ppp (x, y, xrange = range (x),
                                       yrange = range (y))
                 ch <- spatstat::convexhull (xy2)
-                bdry [[i]] <- cbind (ch$bdry[[1]]$x, ch$bdry[[1]]$y)
+                bdry [[i]] <- cbind (i, ch$bdry[[1]]$x, ch$bdry[[1]]$y)
             }
-            bdry [[i]] <- cbind (i, bdry [[i]])
         }
-        bdry <- data.frame (do.call (rbind, bdry))
-        names (bdry) <- c ("id", "x", "y")
-
-        aes <- ggplot2::aes (x = x, y = y, group = id)
-        map <- map + ggplot2::geom_polygon (data = bdry, mapping = aes,
-                                            colour = cols [bdry$id],
-                                            fill = "transparent",
-                                            size = border_width)
     }
+    bdry <- data.frame (do.call (rbind, bdry))
+    names (bdry) <- c ("id", "x", "y")
+
+    aes <- ggplot2::aes (x = x, y = y, group = id)
+    map <- map + ggplot2::geom_polygon (data = bdry, mapping = aes,
+                                        colour = cols [bdry$id],
+                                        fill = "transparent",
+                                        size = border_width)
 
     return (map)
 }

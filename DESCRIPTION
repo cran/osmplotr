@@ -1,8 +1,9 @@
 Package: osmplotr
 Title: Bespoke Images of 'OpenStreetMap' Data
-Version: 0.3.0
+Version: 0.3.2
 Authors@R: c(
     person("Mark", "Padgham", email="mark.padgham@email.com", role=c("aut", "cre")),
+    person("Richard", "Beare", role="aut"),
     person("Finkelstein", "Noam", role=c("ctb","cph"),
         comment="Author of included stub.R code"),
     person ("Bartnik", "Lukasz", role=c("ctb","cph"),
@@ -10,20 +11,22 @@ Authors@R: c(
 Description: Bespoke images of 'OpenStreetMap' ('OSM') data and data
     visualisation using 'OSM' objects.
 Depends: R (>= 3.2.3)
-Imports: curl, e1071, ggm, ggplot2, httr, methods, osmdata, rgeos, sp,
-        spatstat
-Suggests: knitr, roxygen2, rmarkdown, devtools, maptools, testthat
+Imports: curl, e1071, ggm, ggplot2, httr, mapproj, methods, osmdata,
+        rgeos, sp, spatstat
+Suggests: knitr, magrittr, roxygen2, rmarkdown, devtools, testthat
 License: GPL-3
 URL: https://github.com/ropensci/osmplotr
 BugReports: https://github.com/ropensci/osmplotr/issues
 LazyData: true
+Encoding: UTF-8
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 NeedsCompilation: no
-Packaged: 2017-06-30 09:32:01 UTC; markus
+Packaged: 2018-12-19 09:11:31 UTC; markus
 Author: Mark Padgham [aut, cre],
+  Richard Beare [aut],
   Finkelstein Noam [ctb, cph] (Author of included stub.R code),
   Bartnik Lukasz [ctb, cph] (Author of included stub.R code)
 Maintainer: Mark Padgham <mark.padgham@email.com>
 Repository: CRAN
-Date/Publication: 2017-06-30 13:08:45 UTC
+Date/Publication: 2018-12-19 13:40:03 UTC
