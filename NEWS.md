@@ -1,3 +1,15 @@
+osmplotr v0.3.3
+===============
+
+Minor changes
+-------
+- Changes in response to `spatstat` v2 updates
+
+Minor changes
+-------
+- 'add_osm_surface' functions changed to directly calculate and plot colours of
+  objects, rather than rely on `ggplot2::scale_fill_gradientn`.
+
 osmplotr v0.3.2
 ===============
 

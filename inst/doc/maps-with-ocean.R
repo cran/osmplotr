@@ -1,8 +1,8 @@
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 map_dpi <- 72 # dpi res for all maps
 fetch_osm <- FALSE
 
-## ----GMFuncs, message=FALSE, eval = fetch_osm----------------------------
+## ----GMFuncs, message=FALSE, eval = fetch_osm---------------------------------
 #  library (osmplotr)
 #  library (osmdata)
 #  library (magrittr)
@@ -12,10 +12,10 @@ fetch_osm <- FALSE
 #      add_osm_feature (key = "natural", value = "coastline") %>%
 #      osmdata_sf (quiet = FALSE)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  coast
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 message (paste0 ("Object of class 'osmdata' with:\n",
 "                 $bbox : -38.49937,144.44405,-37.40175,146.1925\n",
 "        $overpass_call : The call submitted to the overpass API\n",
@@ -26,20 +26,20 @@ message (paste0 ("Object of class 'osmdata' with:\n",
 "       $osm_multilines : 'sf' Simple Features Collection with 0 multilinestrings\n",
 "    $osm_multipolygons : 'sf' Simple Features Collection with 0 multipolygons"))
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  coast_poly <- osm_line2poly (coast$osm_lines, bbox)
 #  names(coast_poly)
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 c ("sea", "land", "islands")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  class (coast_poly$sea)
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 c ("sf", "data.frame")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  map <- osm_basemap (bbox = bbox, bg = "cadetblue2") %>%
 #    add_osm_objects (coast_poly$land, col = "lightyellow1") %>%
 #    add_osm_objects (coast_poly$islands, col="orange") %>%
@@ -47,11 +47,11 @@ c ("sf", "data.frame")
 #    add_osm_objects (coast$osm_lines, col="black") %>%
 #    print_osm_map ()
 
-## ---- echo=FALSE, eval = fetch_osm---------------------------------------
+## ---- echo=FALSE, eval = fetch_osm--------------------------------------------
 #  print_osm_map (map, filename = 'melb_a1.png', width = 600,
 #                 units = 'px', dpi = map_dpi)
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
   getCoast <- function(bbox)
   {
     qry <- opq(bbox)
@@ -83,7 +83,7 @@ c ("sf", "data.frame")
   }
   
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  test_plot <- function (bbox)
 #  {
 #      dat <- opq (bbox) %>%
@@ -95,7 +95,7 @@ c ("sf", "data.frame")
 #          add_osm_objects(coast$land, col = 'sienna2')
 #  }
 
-## ---- eval = fetch_osm, echo = FALSE-------------------------------------
+## ---- eval = fetch_osm, echo = FALSE------------------------------------------
 #  test_plot <- function (bbox, filename, map_dpi)
 #  {
 #      dat <- opq (bbox) %>%
@@ -109,7 +109,7 @@ c ("sf", "data.frame")
 #                         units = "px", dpi = map_dpi)
 #  }
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #      bbWE <- get_bbox (c(142.116906, -38.352713, 142.205162, -38.409661))
 #      coastWE <- getCoast(bbWE)
 #  
@@ -144,36 +144,36 @@ c ("sf", "data.frame")
 #      coastWS <- getCoast(bbWS)
 #  
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastWE, bbWE, "testWE.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastEW, bbEW, "testEW.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastNS, bbNS, "testNS.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastSN, bbSN, "testSN.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastWW, bbWW, "testWW.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastEE, bbEE, "testEE.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastNN, bbNN, "testNN.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastSS, bbSS, "testSS.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastEN, bbEN, "testEN.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastEWWS, bbEWWS, "testEWWS.png")
 
-## ---- eval = fetch_osm---------------------------------------------------
+## ---- eval = fetch_osm--------------------------------------------------------
 #  testPlotPoly(coastWS, bbWS, "testWS.png")
 

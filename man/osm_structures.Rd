@@ -4,8 +4,11 @@
 \alias{osm_structures}
 \title{osm_structures}
 \usage{
-osm_structures(structures = c("building", "amenity", "waterway", "grass",
-  "natural", "park", "highway", "boundary", "tree"), col_scheme = "dark")
+osm_structures(
+  structures = c("building", "amenity", "waterway", "grass", "natural", "park",
+    "highway", "boundary", "tree"),
+  col_scheme = "dark"
+)
 }
 \arguments{
 \item{structures}{The vector of types of structures (defaults listed in
@@ -30,8 +33,8 @@ passed to \code{\link{make_osm_map}} to automate map production.
 # Default structures:
 osm_structures ()
 # user-defined structures:
-structures <- c ('highway', 'park', 'ameniiy', 'tree')
-structs <- osm_structures (structures = structures, col_scheme = 'light')
+structures <- c ("highway", "park", "ameniiy", "tree")
+structs <- osm_structures (structures = structures, col_scheme = "light")
 # make_osm_map returns potentially modified list of data
 \dontrun{
 dat <- make_osm_map (osm_data = london, structures = structs)

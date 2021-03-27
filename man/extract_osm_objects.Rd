@@ -4,8 +4,16 @@
 \alias{extract_osm_objects}
 \title{extract_osm_objects}
 \usage{
-extract_osm_objects(bbox, key, value, extra_pairs, return_type,
-  sf = TRUE, geom_only = FALSE, quiet = FALSE)
+extract_osm_objects(
+  bbox,
+  key,
+  value,
+  extra_pairs,
+  return_type,
+  sf = TRUE,
+  geom_only = FALSE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{bbox}{the bounding box within which all key-value objects should be
@@ -28,7 +36,7 @@ to the overpass API.}
 \code{return_type = 'line'} will, for example, always return a
 SpatialLinesDataFrame. If not specified, defaults to 'sensible' values (for
 example, \code{lines} for highways, \code{points} for trees, \code{polygons}
-for bulidings).}
+for buildings).}
 
 \item{sf}{If \code{TRUE}, return Simple Features (\code{sf}) objects;
 otherwise Spatial (\code{sp}) objects.}
@@ -52,10 +60,15 @@ Downloads OSM XML objects and converts to \code{sp} objects
 bbox <- get_bbox (c(-0.13,51.50,-0.11,51.52))
 dat_B <- extract_osm_objects (key = 'building', bbox = bbox)
 dat_H <- extract_osm_objects (key = 'highway', bbox = bbox)
-dat_BR <- extract_osm_objects (key = 'building', value = 'residential',
+dat_BR <- extract_osm_objects (key = 'building',
+                               value = 'residential',
                                bbox = bbox)
-dat_HP <- extract_osm_objects (key = 'highway', value = 'primary', bbox = bbox)
-dat_HNP <- extract_osm_objects (key = 'highway', value = '!primary', bbox = bbox)
+dat_HP <- extract_osm_objects (key = 'highway',
+                               value = 'primary',
+                               bbox = bbox)
+dat_HNP <- extract_osm_objects (key = 'highway',
+                                value = '!primary',
+                                bbox = bbox)
 extra_pairs <- c ('name', 'Royal.Festival.Hall')
 dat <- extract_osm_objects (key = 'building', extra_pairs = extra_pairs,
                             bbox = bbox)

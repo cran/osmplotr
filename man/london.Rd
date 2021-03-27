@@ -4,7 +4,9 @@
 \name{london}
 \alias{london}
 \title{london}
-\format{A list of spatial objects}
+\format{
+A list of spatial objects
+}
 \description{
 A list of \code{Simple Features} (\code{sf}) \code{data.frame} objects
 containing OpenStreetMap polygons, lines, and points for various
@@ -19,7 +21,7 @@ OpenStreetMap structures in a small part of central London, U.K.  (\code{bbox
  \item \code{dat_A}: 372 amenities as polygons
  \item \code{dat_P}: 13 parks as polygons
  \item \code{dat_T}: 688 trees as points
- \item \code{dat_RFH}: 1 polygon representing Royal Festival Hall 
+ \item \code{dat_RFH}: 1 polygon representing Royal Festival Hall
  \item \code{dat_ST}: 1 polygon representing 150 Stamford Street
 }
 }
